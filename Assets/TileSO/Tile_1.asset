@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectType: 2
   tileName: Triangle
-  color: {r: 0.90588236, g: 0.3019608, b: 0.33333334, a: 0}
+  color: {r: 0.90588236, g: 0.3019608, b: 0.33333334, a: 1}
   sprite: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}

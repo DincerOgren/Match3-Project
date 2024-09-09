@@ -3,7 +3,7 @@ using UnityEngine;
 public class GridManager : MonoBehaviour
 {
     public int gridWidth = 8, gridHeight = 8; // Set your desired grid dimensions
-    public GameObject backgroundTile; // Drag your tile prefab here in the inspector
+    public GameObject backgroundPrefab; // Drag your tile prefab here in the inspector
     public Transform gridParent; // Optional: Create an empty GameObject in the Hierarchy to parent all tiles
 
     private Vector2 tileSize; // Store tile size for spacing calculation
@@ -12,19 +12,25 @@ public class GridManager : MonoBehaviour
     public GameObject tilePrefab;
     void Start()
     {
-        // Get the size of the tile based on its sprite renderer's bounds
-        SpriteRenderer tileRenderer = tilePrefab.GetComponent<SpriteRenderer>();
-        if (tileRenderer != null)
+        CalculateTileSize();
+        GenerateGrid();
+    }
+    void CalculateTileSize()
+    {
+        // Get the size of the tile based on its SpriteRenderer bounds
+        SpriteRenderer sr = backgroundPrefab.GetComponent<SpriteRenderer>();
+        if (sr != null)
         {
-            tileSize = tileRenderer.bounds.size; // This gives the real world size of the tile
+            // Calculate the world size of the tile (accounting for its scale)
+            tileSize = sr.bounds.size;
         }
         else
         {
-            tileSize = new Vector2(1, 1); // Default to 1x1 if no SpriteRenderer is found
+            // If no SpriteRenderer is present, use the local scale as an approximation
+            tileSize = new Vector2(backgroundPrefab.transform.localScale.x, backgroundPrefab.transform.localScale.y);
         }
-
-        GenerateGrid();
     }
+
 
     void GenerateGrid()
     {
@@ -41,11 +47,14 @@ public class GridManager : MonoBehaviour
         {
             for (int y = 0; y < gridHeight; y++)
             {
+
+
                 // Calculate the new position based on the tile size and parent offset
-                Vector2 position = new Vector2(x * tileSize.x, y * tileSize.y) + new Vector2(gridOffset.x, gridOffset.y);
+                Vector2 position = new Vector2(x * tileSize.x, y * tileSize.y) + (Vector2)gridOffset;
+
 
                 // Instantiate the tile at the calculated position
-                GameObject newTile = Instantiate(tilePrefab, position, Quaternion.identity);
+                GameObject newTile = Instantiate(backgroundPrefab, position, Quaternion.identity);
 
                 BackgroundHolder bg = newTile.GetComponent<BackgroundHolder>();
 

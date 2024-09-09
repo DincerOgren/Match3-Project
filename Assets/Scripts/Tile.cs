@@ -2,14 +2,14 @@ using UnityEngine;
 
 public class Tile : MonoBehaviour
 {
-    private SpriteRenderer spriteRenderer;
     private Vector3 initialScale;
+    public ObjectType objectType;
+
 
     private void Start()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
         initialScale = transform.localScale;
-        
+
     }
 
     private void OnMouseDown()
@@ -17,7 +17,7 @@ public class Tile : MonoBehaviour
         GameManager.Instance.SelectTile(this);
     }
 
-     public void HighlightTile(bool highlight)
+    public void HighlightTile(bool highlight)
     {
         if (highlight)
         {

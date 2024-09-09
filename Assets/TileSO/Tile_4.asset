@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectType: 0
   tileName: Square
-  color: {r: 0.42352942, g: 0.53333336, b: 0.94509804, a: 0}
+  color: {r: 0.42352942, g: 0.53333336, b: 0.94509804, a: 1}
   sprite: {fileID: -5177388603050735206, guid: 8884154dfe85442a3a3578be807dbcdf, type: 3}

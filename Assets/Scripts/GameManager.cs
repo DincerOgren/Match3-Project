@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour
         if (selectedTileA == null)
         {
             // First tile selected
+            print("Tile Selected1");
             selectedTileA = tile;
             tile.HighlightTile(true);
         }
@@ -32,13 +33,18 @@ public class GameManager : MonoBehaviour
         {
             // Second tile selected
             selectedTileB = tile;
+            print("Tile Selected2");
+
             tile.HighlightTile(true);
 
             // Check if the two tiles are adjacent before swapping
             if (AreTilesAdjacent(selectedTileA, selectedTileB))
             {
+                print("Should Swap");
                 SwapTiles(selectedTileA, selectedTileB);
             }
+            else
+                print("ShouldntSwap");
 
             // Deselect tiles
             selectedTileA.HighlightTile(false);

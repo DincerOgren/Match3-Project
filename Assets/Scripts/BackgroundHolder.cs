@@ -15,13 +15,18 @@ public class BackgroundHolder : MonoBehaviour
     void Initalize()
     {
         int tileToUse = Random.Range(0, tiles.Length);
-        TileObject tile = Instantiate(tiles[tileToUse], transform.position, Quaternion.identity);
-       // SetTile(tile);
+        TileObject tile = tiles[tileToUse];
+        GameObject spawnedObject = Instantiate(tilePrefab, transform.position, Quaternion.identity);
+        SetTile(tile,spawnedObject);
     }
 
-    public void SetTile(TileObject tile)
+    public void SetTile(TileObject tile,GameObject spawnedObject)
     {
-
+        spawnedObject.GetComponent<SpriteRenderer>().sprite = tile.sprite;
+        spawnedObject.GetComponent<SpriteRenderer>().color = tile.color;
+        spawnedObject.name = tile.name;
+        spawnedObject.GetComponent<Tile>().objectType=tile.objectType;
+        heldTile = spawnedObject.GetComponent<Tile>();
     }
     public void AssignTile(Tile tile)
     {

@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectType: 1
   tileName: Circle
-  color: {r: 0.26666668, g: 0.8980392, b: 0.36862746, a: 0}
+  color: {r: 0.26666668, g: 0.8980392, b: 0.36862746, a: 1}
   sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}

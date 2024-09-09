@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectType: 3
   tileName: Hexagon
-  color: {r: 1, g: 0.6784314, b: 0, a: 0}
+  color: {r: 1, g: 0.6784314, b: 0, a: 1}
   sprite: {fileID: 2747690628134850419, guid: b670ab75dde984907b8570040daa08c5, type: 3}
