@@ -4,7 +4,7 @@ public class Tile : MonoBehaviour
 {
     private Vector3 initialScale;
     public ObjectType objectType;
-
+    public Vector2Int index;
 
     private void Start()
     {

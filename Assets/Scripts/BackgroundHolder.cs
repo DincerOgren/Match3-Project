@@ -1,12 +1,15 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class BackgroundHolder : MonoBehaviour
 {
+    public Vector2Int arrayIndex;
     public Tile heldTile;  // The Tile that this backgroundObject is holding
 
     public TileObject[] tiles;
     public GameObject tilePrefab;
 
+    public Transform objectParent;
     private void Start()
     {
         Initalize();
@@ -26,16 +29,15 @@ public class BackgroundHolder : MonoBehaviour
         spawnedObject.GetComponent<SpriteRenderer>().color = tile.color;
         spawnedObject.name = tile.name;
         spawnedObject.GetComponent<Tile>().objectType=tile.objectType;
+        spawnedObject.transform.parent=objectParent;
         heldTile = spawnedObject.GetComponent<Tile>();
-    }
-    public void AssignTile(Tile tile)
-    {
-        heldTile = tile;
-        tile.transform.position = this.transform.position;  // Position the tile on top of the background object
-        tile.transform.parent = this.transform;             // Set the background as the parent of the tile
-    }
+        heldTile.index = arrayIndex;
 
-    // Optional: You can also implement logic here to check if the tile is removable or empty
+        GameManager.Instance.grid[arrayIndex.x,arrayIndex.y] = heldTile;
+       // GameManager.Instance.SetGrid(arrayIndex, heldTile);
+    }
+  
+
     public bool HasTile()
     {
         return heldTile != null;

@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    public int gridWidth = 8, gridHeight = 8; // Set your desired grid dimensions
     public GameObject backgroundPrefab; // Drag your tile prefab here in the inspector
     public Transform gridParent; // Optional: Create an empty GameObject in the Hierarchy to parent all tiles
 
@@ -10,11 +9,24 @@ public class GridManager : MonoBehaviour
     public TileObject[] tiles;
 
     public GameObject tilePrefab;
+    private Vector2Int gridValues; // Set your desired grid dimensions
+
+    [SerializeField] Transform _objectParent;
+
     void Start()
     {
+
+        SetGridValues();
+
         CalculateTileSize();
         GenerateGrid();
     }
+
+    private void SetGridValues()
+    {
+        gridValues = GameManager.Instance.gridValues;
+    }
+
     void CalculateTileSize()
     {
         // Get the size of the tile based on its SpriteRenderer bounds
@@ -43,9 +55,9 @@ public class GridManager : MonoBehaviour
         }
 
         // Generate the grid relative to the parent's position
-        for (int x = 0; x < gridWidth; x++)
+        for (int x = 0; x < gridValues.x; x++)
         {
-            for (int y = 0; y < gridHeight; y++)
+            for (int y = 0; y < gridValues.y; y++)
             {
 
 
@@ -56,10 +68,12 @@ public class GridManager : MonoBehaviour
                 // Instantiate the tile at the calculated position
                 GameObject newTile = Instantiate(backgroundPrefab, position, Quaternion.identity);
 
-                BackgroundHolder bg = newTile.GetComponent<BackgroundHolder>();
 
+                BackgroundHolder bg = newTile.GetComponent<BackgroundHolder>();
+                bg.arrayIndex = new Vector2Int(x, y);
                 bg.tiles = tiles;
                 bg.tilePrefab = tilePrefab;
+                bg.objectParent = _objectParent;
 
 
                 // Set the new tile under the grid parent in the Hierarchy
@@ -72,5 +86,6 @@ public class GridManager : MonoBehaviour
                 newTile.name = $"Tile_{x}_{y}";
             }
         }
+
     }
 }
