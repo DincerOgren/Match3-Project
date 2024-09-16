@@ -69,6 +69,7 @@ public class GameManager : MonoBehaviour
             {
                 print("Should Swap");
                 SwapTiles(selectedTileA, selectedTileB);
+                
             }
             else
                 print("ShouldntSwap");
@@ -104,6 +105,16 @@ public class GameManager : MonoBehaviour
         tileA.transform.DOMove(tileBStartPos, _cycleDuration);
         tileB.transform.DOMove(tileAStartPos, _cycleDuration);
 
+        temp = grid[tileA.index] ;
+        tileB.index=tileA.index;
+
+        
+
+
+
+
+
+        // SHOULD SWAP ARRAY TOO
         //check if there is match 
         //else return start positions
 
@@ -183,6 +194,7 @@ public class GameManager : MonoBehaviour
             if (nextTile != null && nextTile.objectType == startTile.objectType)
             {
                 matchCount++;
+                //print("Match found on tile[" + startX + "," +  "]");
             }
             else
             {
@@ -194,10 +206,10 @@ public class GameManager : MonoBehaviour
         if (matchCount >= 3)
         {
             Debug.Log($"Vertical match found starting at {startX}, {startY}!");
-            //for (int i = 0; i < matchCount; i++)
-            //{
-            //    RemoveTile(grid[startX, startY + i]);
-            //}
+            for (int i = 0; i < matchCount; i++)
+            {
+                RemoveTile(grid[startX, startY + i]);
+            }
         }
     }
 
