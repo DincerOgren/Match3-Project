@@ -69,7 +69,6 @@ public class GameManager : MonoBehaviour
             {
                 print("Should Swap");
                 SwapTiles(selectedTileA, selectedTileB);
-                
             }
             else
                 print("ShouldntSwap");
@@ -105,19 +104,37 @@ public class GameManager : MonoBehaviour
         tileA.transform.DOMove(tileBStartPos, _cycleDuration);
         tileB.transform.DOMove(tileAStartPos, _cycleDuration);
 
-        temp = grid[tileA.index] ;
-        tileB.index=tileA.index;
 
-        
+        //print("Before change "+GameManager.Instance.grid[tileA.index.x,tileA.index.y].objectType + "index = " + tileA.index);
+        //print("Before change "+GameManager.Instance.grid[tileB.index.x,tileB.index.y].objectType + "index = " + tileB.index);
+        ArraySwap(tileA, tileB);
 
+        //print("After change " + GameManager.Instance.grid[tileA.index.x, tileA.index.y].objectType+ "index = "+tileA.index);
+        //print("After change " + GameManager.Instance.grid[tileB.index.x, tileB.index.y].objectType + "index = " + tileB.index);
 
+        // SHOULD SWAP ARRAY TOO +check
 
-
-
-        // SHOULD SWAP ARRAY TOO
         //check if there is match 
+        CheckForMatches();
         //else return start positions
 
+    }
+
+    private void ArraySwap(Tile tileA, Tile tileB)
+    {
+        Vector2Int tempTile;
+
+        tempTile = tileA.index; //GameManager.Instance.grid[tileA.index.x,tileA.index.y];
+        print("temp index = " + tempTile);
+        tileA.index = tileB.index;
+        tileB.index = tempTile;
+        print("After change index = " + tileA.index);
+        print("After change index = " + tileB.index);
+
+        //still have some issues need to fix it
+
+        grid[tileA.index.x, tileA.index.y] = tileB;
+        grid[tileB.index.x, tileB.index.y] = tileA;
     }
 
     private void Update()
@@ -141,7 +158,7 @@ public class GameManager : MonoBehaviour
                 //print("currenttile " + currentTile.name + " " + currentTile.objectType);
                 if (currentTile != null)
                 {
-                   // CheckHorizontalMatch(x, y);
+                    CheckHorizontalMatch(x, y);
                     CheckVerticalMatch(x, y);
                 }
                 else
@@ -175,17 +192,17 @@ public class GameManager : MonoBehaviour
         if (matchCount >= 3)
         {
             Debug.Log($"Horizontal match found starting at {startX}, {startY}!");
-            //for (int i = 0; i < matchCount; i++)
-            //{
-            //    RemoveTile(grid[startX + i, startY]);
-            //}
+            for (int i = 0; i < matchCount; i++)
+            {
+                RemoveTile(grid[startX + i, startY]);
+            }
         }
     }
 
     private void CheckVerticalMatch(int startX, int startY)
     {
         Tile startTile = grid[startX, startY];
-        print("Checking match on tile[" + startX + "," + startY + "]");
+        
         int matchCount = 1;
 
         for (int y = startY + 1; y < gridValues.y; y++)
@@ -217,7 +234,8 @@ public class GameManager : MonoBehaviour
     {
         if (tile != null)
         {
-            Destroy(tile.gameObject);
+            tile.gameObject.SetActive(false);
+           // Destroy(tile.gameObject);
             //Adjust score, spawn new symbols etc.
         }
     }
