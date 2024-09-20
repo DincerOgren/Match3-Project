@@ -153,13 +153,15 @@ public class GameManager : MonoBehaviour
             {
                 // GRID IS SOMEHOW NULL SHOULD FIX THAT IMMIDEATLY
                 print(grid[x, y].name);
-                
+
                 Tile currentTile = grid[x, y];
                 //print("currenttile " + currentTile.name + " " + currentTile.objectType);
                 if (currentTile != null)
                 {
                     CheckHorizontalMatch(x, y);
                     CheckVerticalMatch(x, y);
+
+                    
                 }
                 else
                 {
@@ -167,6 +169,8 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+
+        DropTiles();
     }
 
     private void CheckHorizontalMatch(int startX, int startY)
@@ -178,7 +182,7 @@ public class GameManager : MonoBehaviour
         for (int x = startX + 1; x < gridValues.x; x++)
         {
             Tile nextTile = grid[x, startY];
-            if (nextTile != null && nextTile.objectType== startTile.objectType)
+            if (nextTile != null && nextTile.objectType == startTile.objectType)
             {
                 matchCount++;
             }
@@ -195,6 +199,7 @@ public class GameManager : MonoBehaviour
             for (int i = 0; i < matchCount; i++)
             {
                 RemoveTile(grid[startX + i, startY]);
+                grid[startX + i, startY].objectType = ObjectType.empty;
             }
         }
     }
@@ -202,7 +207,7 @@ public class GameManager : MonoBehaviour
     private void CheckVerticalMatch(int startX, int startY)
     {
         Tile startTile = grid[startX, startY];
-        
+
         int matchCount = 1;
 
         for (int y = startY + 1; y < gridValues.y; y++)
@@ -226,7 +231,48 @@ public class GameManager : MonoBehaviour
             for (int i = 0; i < matchCount; i++)
             {
                 RemoveTile(grid[startX, startY + i]);
+                grid[startX, startY + i].objectType = ObjectType.empty;
             }
+        }
+
+    }
+
+    void DropTiles()
+    {
+        //Check if its block is null?
+
+        for (int i = 0; i < gridValues.x; i++)
+        {
+            for (int y = gridValues.y - 1; y > 0; y--)
+            {
+
+            
+                Tile downTile = grid[i, y];
+                print("Vector(" + i + "," + y+")");
+                if (downTile.objectType != ObjectType.empty)
+                {
+                    continue;
+                }
+                else
+                {
+                    int z = y;
+                    while (true)
+                    {
+                        print("!!MOVING OBJECT" + " i= "+i+" , "+ " y = "+z);
+                        grid[i,z+1].transform.DOMove(grid[i, z - 1].transform.position, _cycleDuration);
+
+                        grid[i, z] = grid[i, z+1];
+                        if (z >= gridValues.y-2)
+                        {
+                            break;
+                        }
+                        z++;
+                    }
+
+                    break;
+                }
+            }
+
         }
     }
 
@@ -235,8 +281,9 @@ public class GameManager : MonoBehaviour
         if (tile != null)
         {
             tile.gameObject.SetActive(false);
-           // Destroy(tile.gameObject);
+            // Destroy(tile.gameObject);
             //Adjust score, spawn new symbols etc.
+
         }
     }
 

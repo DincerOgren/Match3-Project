@@ -16,6 +16,7 @@ public enum ObjectType
     square = 0,
     circle=1,
     triangle=2,
-    hexagon=3
+    hexagon=3,
+    empty=4
 
 }
