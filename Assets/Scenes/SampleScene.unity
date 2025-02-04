@@ -457,8 +457,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileSlotPrefab: {fileID: 9027797715422582461, guid: de4708bdb7fab0d459cd7e7bc01866b0, type: 3}
   tilePrefab: {fileID: 6104031461563029560, guid: 6a0bf45aeb9e8d84a995a7a9bb26960a, type: 3}
-  gridWidth: 4
-  gridHeigth: 5
   sizeOffset: 20
   allTiles:
   - {fileID: 11400000, guid: f6fd49b18440d564c909eec3f77afb0c, type: 2}
@@ -636,8 +634,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2083709d16fd231489e88deafc9dbeba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _cycleLength: 0.3
+  _gridLength: {x: 4, y: 5}
   tileA: {fileID: 0}
   tileB: {fileID: 0}
+  matchList: []
+  tempMatchList: []
 --- !u!1 &2090714452
 GameObject:
   m_ObjectHideFlags: 0

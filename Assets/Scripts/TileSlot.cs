@@ -3,17 +3,19 @@ using UnityEngine;
 
 public class TileSlot : MonoBehaviour
 {
+    //TODO: Privatte name convencion;
     public Tile currentTile;
 
-    public Vector2Int tileNum;
+    public Vector2Int tileIndex;
 
     private void OnMouseDown()
     {
         GameManager.Instance.SelectTile(currentTile);
     }
-    public void AssignTile(Tile tile)
+    public void SetTile(Tile tile)
     {
         currentTile = tile;
+        tile.index = tileIndex;
         tile.SetSlot(this); // Let the tile know its slot
     }
 
@@ -26,4 +28,6 @@ public class TileSlot : MonoBehaviour
     {
         currentTile = null; // Tile is removed (e.g., after a match)
     }
+
+    public Tile GetTile() => currentTile;
 }

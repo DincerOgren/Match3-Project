@@ -1,13 +1,14 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public class GridManager : MonoBehaviour
 {
+    public static GridManager Instance;
     public TileSlot tileSlotPrefab;
     public Tile tilePrefab;
-    public int gridWidth = 5;
-    public int gridHeigth = 5;
+    Vector2Int _gridSize;
     public int sizeOffset = 20;
     public TileSlot[,] gridArray;
 
@@ -16,14 +17,35 @@ public class GridManager : MonoBehaviour
     public Vector2 tileSize;
     public Transform tileParent;
     public Transform gridParent;
+
+
+    private void Awake()
+    {
+        Instance = this;
+
+
+        
+    }
     void Start()
     {
-        gridArray = new TileSlot[gridWidth, gridHeigth];
+
+        GetGridSizeFromManager();
+
+        gridArray = new TileSlot[_gridSize.x, _gridSize.y];
 
         CalculateTileSize();
 
         GenerateGrid();
+
+
+        
     }
+
+    private void GetGridSizeFromManager()
+    {
+        _gridSize = GameManager.Instance.GetGridSize();
+    }
+
     void CalculateTileSize()
     {
         // Get the size of the tile based on its SpriteRenderer bounds
@@ -52,14 +74,14 @@ public class GridManager : MonoBehaviour
 
 
 
-        for (int y = 0; y < gridHeigth; y++)
+        for (int y = 0; y < _gridSize.y; y++)
         {
-            for (int x = 0; x < gridWidth; x++)
+            for (int x = 0; x < _gridSize.x; x++)
             {
                 Vector2 position = new Vector2(x * tileSize.x, y * tileSize.y) + (Vector2)gridOffset;
 
                 TileSlot temp = Instantiate(tileSlotPrefab, position, Quaternion.identity);
-                temp.tileNum = new(x, y);
+                temp.tileIndex = new(x, y);
 
 
                 //Spawn Tile
@@ -69,10 +91,10 @@ public class GridManager : MonoBehaviour
                 newTile.GetComponent<SpriteRenderer>().sprite = randomObject.sprite;
                 newTile.GetComponent<SpriteRenderer>().color = randomObject.color;
                 newTile.objectType = randomObject.objectType;
-                newTile.index = temp.tileNum;
-                newTile.SetSlot(temp);
+               // newTile.index = temp.tileNum;
+                newTile.AssignSlot(temp);
 
-                temp.AssignTile(newTile);
+                temp.SetTile(newTile);
                 
                 temp.transform.parent = gridParent;
                 temp.name = $"Tile_{x}_{y}";
@@ -80,19 +102,8 @@ public class GridManager : MonoBehaviour
             }
         }
 
-        CheckTiles();
+        
     }
 
-    private void CheckTiles()
-    {
-        for (int i = 0; i < gridHeigth; i++)
-        {
-            for (int j = 0; j < gridWidth; j++)
-            {
-                
-               
-
-            }
-        }
-    }
+    
 }
