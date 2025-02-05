@@ -11,6 +11,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] float _cycleLength = 2;
     [SerializeField] Vector2Int _gridLength = new(5, 5);
 
+
+    public bool checkHorizontalMatches = true;
+    public bool checkVerticalMatches = true;
+
+
     public Tile tileA;
     public Tile tileB;
 
@@ -19,7 +24,8 @@ public class GameManager : MonoBehaviour
 
     public List<int> matchQuantity;
 
-    public List<TileSlot> matchList;
+    public List<TileSlot> hMatchList;
+    public List<TileSlot> vMatchList;
     public List<TileSlot> tempMatchList;
     public List<TileSlot> tempLList;
     public List<TileSlot> lMatchesList;
@@ -45,6 +51,19 @@ public class GameManager : MonoBehaviour
     }
 
 
+    #region GAME LOOP
+
+    // SWAP                                         V
+    // DETECT MATCH                                 V
+    // DESTROY MATCHES                              V
+    // REPLACE MATCHES WITH NULL                    V
+    // SLIDE ABOVE TILES                            V
+    // SPAWN NEW TILES FOR EMPTY SLOTS              
+    // SLIDE THEM DOWN TOO                          
+
+
+
+    #endregion
     public void SelectTile(Tile tile)
     {
         if (tileA == null)
@@ -134,111 +153,211 @@ public class GameManager : MonoBehaviour
 
 
 
-            Try();
+            CheckMatches();
         }
 
         if (Input.GetKeyDown(KeyCode.W))
         {
             SearchLShape();
         }
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            SlideObjectsAfterMatch();
+        }
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            DestroyHorizontalNLShape();
+            DestroyVerticals();
+        }
 
         if (Input.GetKeyDown(KeyCode.S))
         {
-            matchList.Clear();
+            hMatchList.Clear();
             lMatchesList.Clear();
+            vMatchList.Clear();
+            matchQuantity.Clear();
         }
     }
-    private void CheckMatches()
+    //private void CheckMatches()
+    //{
+
+    //    // Horizontal Match
+    //    //int rightMatchCounter = 0;
+
+
+    //    for (int y = 0; y < 1; y++)
+    //    {
+
+    //        for (int x = 0; x < _gridLength.x; x++)
+    //        {
+    //            var firstTile = grid[x, y];
+    //            if (x + 1 >= _gridLength.x)
+    //            {
+    //                print("continue");
+    //                continue;
+    //            }
+
+
+    //            // GetNextTileOnGrid(firstTile.tileNum.x, firstTile.tileNum.y, 0);
+
+
+    //        }
+    //    }
+    //}
+
+    void CheckMatches()
     {
+        TileSlot firstTile;
+        if (checkHorizontalMatches)
+        {
+            //horizontal
 
-        // Horizontal Match
-        //int rightMatchCounter = 0;
+            int rightLink = 0;
+            //length -2 ?
+            for (int y = 0; y < _gridLength.y; y++)
+            {
+                print("in most up for :" + y);
+                int row = 0;
 
+                while (row <= _gridLength.x - 2)
+                {
+                    print("in while row : " + row);
 
-        for (int y = 0; y < 1; y++)
+                    firstTile = grid[row, y];
+
+                    if (hMatchList.Contains(firstTile))
+                    {
+                        row++;
+                        continue;
+                    }
+
+                    tempMatchList.Add(firstTile);
+
+                    for (int i = row + 1; i < _gridLength.x; i++)
+                    {
+                        print("in for : " + i);
+                        if (firstTile.GetTile().objectType == grid[i, y].GetTile().objectType)
+                        {
+                            tempMatchList.Add(grid[i, y]);
+                            rightLink++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    if (rightLink >= 2)
+                    {
+                        print("match found after for");
+                        hMatchList.AddRange(tempMatchList);
+
+                        matchQuantity.Add(rightLink + 1);
+
+                    }
+
+                    rightLink = 0;
+                    tempMatchList.Clear();
+
+                    row++;
+                }
+
+            }
+        }
+
+        //SearchLShape();
+
+        //DestroyHorizontalNLShape();
+
+        // Where to detect L Shapes ?
+
+        int upLink = 0;
+
+        if (checkVerticalMatches)
         {
 
+            //Vertical 
             for (int x = 0; x < _gridLength.x; x++)
             {
-                var firstTile = grid[x, y];
-                if (x + 1 >= _gridLength.x)
+                print("in most up for vertical :" + x);
+                int column = 0;
+
+                while (column <= _gridLength.y - 2)
                 {
-                    print("continue");
-                    continue;
+                    print("checking vertical matches for grid[" + x + "," + column + "]");
+
+                    firstTile = grid[x, column];
+
+                    if (vMatchList.Contains(firstTile))
+                    {
+                        column++;
+                        continue;
+                    }
+
+                    tempMatchList.Add(firstTile);
+
+                    for (int i = column + 1; i < _gridLength.y; i++)
+                    {
+                        print("in vertical for : " + i);
+                        if (firstTile.GetTile().objectType == grid[x, i].GetTile().objectType)
+                        {
+                            tempMatchList.Add(grid[x, i]);
+                            upLink++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    if (upLink >= 2)
+                    {
+                        print("vertical match found after for");
+                        vMatchList.AddRange(tempMatchList);
+
+                    }
+
+                    upLink = 0;
+                    tempMatchList.Clear();
+
+                    column++;
                 }
-
-
-                // GetNextTileOnGrid(firstTile.tileNum.x, firstTile.tileNum.y, 0);
-
 
             }
         }
+
     }
 
-    void Try()
+    private void DestroyHorizontalNLShape()
     {
-        int row = 0;
-        //horizontal
-        TileSlot firstTile;
+        // DELETE FROM V LIST TOO 
+        //if (vMatchList.Contains(hMatchList[i]))
+        //{
+        // LIKE THIS
+        //}
 
-        int rightLink = 0;
-        //length -2 ?
-        for (int y = 0; y < _gridLength.y; y++)
+        for (int i = 0; i < hMatchList.Count; i++)
         {
-            print("in most up for :" + y);
-            row = 0;
-
-            while (row <= _gridLength.x - 2)
+            //MAYBE DO THIS INSIDE LSHAPESEARCH ???
+            if (vMatchList.Contains(hMatchList[i]))
             {
-                print("in while row : " + row);
-
-                firstTile = grid[row, y];
-
-                if (matchList.Contains(firstTile))
-                {
-                    row++;
-                    continue;
-                }
-
-                tempMatchList.Add(firstTile);
-
-                for (int i = row + 1; i < _gridLength.x; i++)
-                {
-                    print("in for : " + i);
-                    if (firstTile.GetTile().objectType == grid[i, y].GetTile().objectType)
-                    {
-                        tempMatchList.Add(grid[i, y]);
-                        rightLink++;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                if (rightLink >= 2)
-                {
-                    print("match found after for");
-                    matchList.AddRange(tempMatchList);
-
-                    matchQuantity.Add(rightLink + 1);
-
-                }
-
-                rightLink = 0;
-                tempMatchList.Clear();
-
-                row++;
+                vMatchList.Remove(hMatchList[i]);
             }
-
+            hMatchList[i].DestroyTile();
         }
-
-
     }
 
+    void DestroyVerticals()
+    {
+        for (int i = 0; i < vMatchList.Count; i++)
+        {
+            vMatchList[i].DestroyTile();
+        }
+    }
     void SearchLShape()
     {
-        if (matchList.Count == 0)
+        if (hMatchList.Count == 0)
         {
             print("Matchlist empty");
             return;
@@ -248,14 +367,17 @@ public class GameManager : MonoBehaviour
         int upLinks = 0;
         int downLinks = 0;
         // Cycle through every tile and find up and down links
-        while (k < matchList.Count)
+        while (k < hMatchList.Count)
         {
+            print("while k = " + k);
             upLinks = 0;
             downLinks = 0;
             //find up links 
-            TileSlot currentSlot = matchList[k];
-            for (int i = currentSlot.tileIndex.y + 1; i <= _gridLength.y - currentSlot.tileIndex.y; i++)
+            TileSlot currentSlot = hMatchList[k];
+            for (int i = currentSlot.tileIndex.y + 1; i <= _gridLength.y -1; i++)
             {
+                print("i = " + i + " calculated value = " + (_gridLength.y - currentSlot.tileIndex.y));
+
                 if (grid[currentSlot.tileIndex.x, i].GetTile().objectType == currentSlot.GetTile().objectType)
                 {
                     upLinks++;
@@ -285,6 +407,52 @@ public class GameManager : MonoBehaviour
             {
                 print("We find a L shape match");
                 lMatchesList = new(tempLList);
+
+
+                int insertIndex = 0;
+                int index = 0;
+                
+                // Calculating where to insert L Shapes in matchlist 
+                for (int i = 0; i < matchQuantity.Count; i++)
+                {
+                    insertIndex += matchQuantity[i];
+                    if (insertIndex >= k)
+                    {
+                        index = i;
+                        break;
+                        // AYNI ANDA 2 L SENARYOSU KONTROL ET? V Calýsýyor
+                    }
+                }
+                
+                // Safety checks before adding
+                if (lMatchesList.Count > 0 && lMatchesList[0] != null)
+                {
+                    if (!hMatchList.Contains(lMatchesList[0])) // Prevent infinite loop
+                    {
+                        Debug.Log($"Adding {lMatchesList[0].name} to hMatchList.");
+                        
+                        hMatchList.InsertRange(insertIndex, lMatchesList);
+
+                        matchQuantity[index] += upLinks + downLinks;
+
+                        tempLList.Clear();
+                        k += matchQuantity[index];
+                        k++;
+                        continue;
+                    }
+                    else
+                    {
+                        //skip
+                        Debug.LogError("Attempted to add a duplicate item.");
+                    }
+                }
+                else
+                {
+                    Debug.LogError("lMatchesList is empty or contains null elements.");
+                }
+
+
+                // UPDATE MATCH QUANTITY ?
                 //Remove from verticalList?
             }
 
@@ -295,56 +463,58 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void GetNextTileOnGrid(int x, int y, int rightLinkCount = 0)
+    void SlideObjectsAfterMatch()
     {
-        int rightLink = rightLinkCount;
-        TileSlot firstTile = grid[x, y];
+        List<TileSlot> nullList = new();
 
-        if (firstTile == null)
+        for (int x = 0; x < _gridLength.x; x++)
         {
-            print("First tile empty");
-            return;
-        }
-
-
-        if (x + 1 > _gridLength.x)
-        {
-            print("X lenghten büyüktrür");
-            return;
-        }
-
-        if (grid[x + 1, y].GetTile().objectType == firstTile.GetTile().objectType)
-        {
-            tempMatchList.Add(firstTile);
-            print("Object Type = " + firstTile.GetTile().objectType);
-            rightLink++;
-            if (rightLink == 2)
+            for (int y = 0; y < _gridLength.y; y++)
             {
-                print("Match");
+                // Check if tile is null
+                if (grid[x,y].GetTile() == null)
+                {
+                    if (nullList.Contains(grid[x,y]))
+                    {
+                        continue;
+                    }
+
+                    nullList.Add(grid[x, y]);
+
+                    int startY = y+1;
+                    while (startY < _gridLength.y)
+                    {
+                        if (grid[x, startY].GetTile() != null)
+                        {
+                            break;
+                        }
+                        else
+                            nullList.Add(grid[x,startY]);
+                        
+                        startY++;
+                    }
+                    print("Should move grid[" + x + "," + startY + "] to grid " + x + "," + y);
+
+                    int j = startY;
+                    int tempY = y;
+                    while(j<_gridLength.y)
+                    {
+                        //if (j+1>_gridLength.y)
+                        //{
+                        //    //LAST ROW
+                        //}
+                        
+
+                        grid[x, tempY].SetTile(grid[x,j].GetTile());
+                        grid[x, j].ClearTile();
+                        tempY++;
+                        j++;
+                    }
+                }                
             }
-            GetNextTileOnGrid(x + 1, y, rightLink);
-
         }
-        else if (rightLink >= 2)
-        {
-            // add matches to list
-            for (int i = tempMatchList[0].tileIndex.x; i < rightLink; i++)
-            {
-                tempMatchList.Add(grid[i, y]);
-                matchList.Add(grid[i, y]);
-            }
-            print("Matches added to list");
-        }
-        else
-        {
-            tempMatchList.Clear();
-            print("No matchees at bottom");
-        }
-
-        print("Rightlinkcounter: " + rightLink);
-
     }
-
+    
     TileSlot GetTile(int x, int y)
     {
         return grid[x, y];

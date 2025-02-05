@@ -1,5 +1,6 @@
 using UnityEngine;
 using DG.Tweening;
+using System;
 
 public class Tile : MonoBehaviour
 {
@@ -27,7 +28,14 @@ public class Tile : MonoBehaviour
         //transform.DOMove(slot.transform.position, _cycleLength).SetEase(Ease.OutSine);
     }
 
+    public void DeleteTile()
+    {
+        Destroy(gameObject);
+    }
+
     public TileSlot GetSlot() => mySlot;
+
+    
 
     public void HighlightTile(bool highlight)
     {

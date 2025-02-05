@@ -636,10 +636,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _cycleLength: 0.3
   _gridLength: {x: 4, y: 5}
+  checkHorizontalMatches: 1
+  checkVerticalMatches: 0
   tileA: {fileID: 0}
   tileB: {fileID: 0}
-  matchList: []
+  matchQuantity: 
+  hMatchList: []
+  vMatchList: []
   tempMatchList: []
+  tempLList: []
+  lMatchesList: []
 --- !u!1 &2090714452
 GameObject:
   m_ObjectHideFlags: 0

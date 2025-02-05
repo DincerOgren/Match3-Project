@@ -28,6 +28,14 @@ public class TileSlot : MonoBehaviour
     {
         currentTile = null; // Tile is removed (e.g., after a match)
     }
+    public void DestroyTile()
+    {
+        // PLAY SFX
+        // PLAY VFX
 
+        currentTile.DeleteTile();
+
+        ClearTile();
+    }
     public Tile GetTile() => currentTile;
 }
