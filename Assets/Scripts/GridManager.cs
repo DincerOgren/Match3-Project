@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -24,7 +25,7 @@ public class GridManager : MonoBehaviour
         Instance = this;
 
 
-        
+
     }
     void Start()
     {
@@ -38,7 +39,7 @@ public class GridManager : MonoBehaviour
         GenerateGrid();
 
 
-        
+
     }
 
     private void GetGridSizeFromManager()
@@ -91,19 +92,37 @@ public class GridManager : MonoBehaviour
                 newTile.GetComponent<SpriteRenderer>().sprite = randomObject.sprite;
                 newTile.GetComponent<SpriteRenderer>().color = randomObject.color;
                 newTile.objectType = randomObject.objectType;
-               // newTile.index = temp.tileNum;
+                // newTile.index = temp.tileNum;
                 newTile.AssignSlot(temp);
 
                 temp.SetTile(newTile);
-                
+
                 temp.transform.parent = gridParent;
                 temp.name = $"Tile_{x}_{y}";
                 gridArray[x, y] = temp;
             }
         }
 
-        
+
     }
 
-    
+    public List<Tile> SpawnTile(int x, int amount)
+    {
+        List<Tile> extraTileList= new();
+        for (int i = 1; i <= amount; i++)
+        {
+            TileObject randomObject = allTiles[Random.Range(0, allTiles.Length)];
+            Tile newTile = Instantiate(tilePrefab, tileParent);
+            newTile.transform.position = new Vector2(x * tileSize.x +gridParent.position.x, _gridSize.y + (tileSize.y*i));
+            newTile.GetComponent<SpriteRenderer>().sprite = randomObject.sprite;
+            newTile.GetComponent<SpriteRenderer>().color = randomObject.color;
+            newTile.objectType = randomObject.objectType;
+            extraTileList.Add(newTile);
+        }
+
+        print("Spawned OBJECTS");
+        return extraTileList;
+    }
+
+
 }

@@ -638,6 +638,7 @@ MonoBehaviour:
   _gridLength: {x: 4, y: 5}
   checkHorizontalMatches: 1
   checkVerticalMatches: 0
+  moveSpeedAfterSpawn: 0.5
   tileA: {fileID: 0}
   tileB: {fileID: 0}
   matchQuantity: 
@@ -646,6 +647,7 @@ MonoBehaviour:
   tempMatchList: []
   tempLList: []
   lMatchesList: []
+  emptyList: []
 --- !u!1 &2090714452
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,11 +15,15 @@ public class Tile : MonoBehaviour
         _cycleLength = GameManager.Instance.GetCycleLength();
     }
 
-    public void SetSlot(TileSlot slot)
+    public void SetSlot(TileSlot slot,float cycle=0)
     {
+        if (cycle == 0)
+        {
+            cycle = _cycleLength;
+        }
         mySlot = slot;
         // transform.position = slot.transform.position; // Snap to slot position
-        transform.DOMove(slot.transform.position, _cycleLength).SetEase(Ease.OutSine);
+        transform.DOMove(slot.transform.position, cycle).SetEase(Ease.OutSine);
     } 
     public void AssignSlot(TileSlot slot)
     {

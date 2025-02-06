@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
     public bool checkHorizontalMatches = true;
     public bool checkVerticalMatches = true;
 
+    public float moveSpeedAfterSpawn = 0.1f;
 
     public Tile tileA;
     public Tile tileB;
@@ -29,6 +30,7 @@ public class GameManager : MonoBehaviour
     public List<TileSlot> tempMatchList;
     public List<TileSlot> tempLList;
     public List<TileSlot> lMatchesList;
+    public List<TileSlot> emptyList;
 
     private void Awake()
     {
@@ -61,6 +63,8 @@ public class GameManager : MonoBehaviour
     // SPAWN NEW TILES FOR EMPTY SLOTS              
     // SLIDE THEM DOWN TOO                          
 
+    // TOMORROW NOTE FIX DELETE TILES WHEN ITS IN LAST ROW AND FIX SPAWN TILES NOT MOVING?
+    // FIX THAT LOOP HOLE IN SPAWN TILES WHILE IT KEEP STUCK ON while(y) cause y is not increasing it should be tempY 
 
 
     #endregion
@@ -150,9 +154,6 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             print("Try matches");
-
-
-
             CheckMatches();
         }
 
@@ -163,6 +164,15 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Q))
         {
             SlideObjectsAfterMatch();
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SpawnNewTiles();
+        }
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+
+            GridManager.Instance.SpawnTile(0,5);
         }
 
         if (Input.GetKeyDown(KeyCode.E))
@@ -179,32 +189,6 @@ public class GameManager : MonoBehaviour
             matchQuantity.Clear();
         }
     }
-    //private void CheckMatches()
-    //{
-
-    //    // Horizontal Match
-    //    //int rightMatchCounter = 0;
-
-
-    //    for (int y = 0; y < 1; y++)
-    //    {
-
-    //        for (int x = 0; x < _gridLength.x; x++)
-    //        {
-    //            var firstTile = grid[x, y];
-    //            if (x + 1 >= _gridLength.x)
-    //            {
-    //                print("continue");
-    //                continue;
-    //            }
-
-
-    //            // GetNextTileOnGrid(firstTile.tileNum.x, firstTile.tileNum.y, 0);
-
-
-    //        }
-    //    }
-    //}
 
     void CheckMatches()
     {
@@ -331,12 +315,6 @@ public class GameManager : MonoBehaviour
 
     private void DestroyHorizontalNLShape()
     {
-        // DELETE FROM V LIST TOO 
-        //if (vMatchList.Contains(hMatchList[i]))
-        //{
-        // LIKE THIS
-        //}
-
         for (int i = 0; i < hMatchList.Count; i++)
         {
             //MAYBE DO THIS INSIDE LSHAPESEARCH ???
@@ -369,12 +347,14 @@ public class GameManager : MonoBehaviour
         // Cycle through every tile and find up and down links
         while (k < hMatchList.Count)
         {
-            print("while k = " + k);
             upLinks = 0;
             downLinks = 0;
             //find up links 
             TileSlot currentSlot = hMatchList[k];
-            for (int i = currentSlot.tileIndex.y + 1; i <= _gridLength.y -1; i++)
+
+            print("while k = " + k + " Tile is = " + currentSlot.name);
+
+            for (int i = currentSlot.tileIndex.y + 1; i <= _gridLength.y - 1; i++)
             {
                 print("i = " + i + " calculated value = " + (_gridLength.y - currentSlot.tileIndex.y));
 
@@ -392,6 +372,8 @@ public class GameManager : MonoBehaviour
 
             for (int i = currentSlot.tileIndex.y - 1; i >= 0; i--)
             {
+                print("i = " + i + " on downliinkm");
+
                 if (grid[currentSlot.tileIndex.x, i].GetTile().objectType == currentSlot.GetTile().objectType)
                 {
                     downLinks++;
@@ -411,33 +393,32 @@ public class GameManager : MonoBehaviour
 
                 int insertIndex = 0;
                 int index = 0;
-                
+
                 // Calculating where to insert L Shapes in matchlist 
                 for (int i = 0; i < matchQuantity.Count; i++)
                 {
                     insertIndex += matchQuantity[i];
-                    if (insertIndex >= k)
+                    if (insertIndex > k)
                     {
                         index = i;
                         break;
                         // AYNI ANDA 2 L SENARYOSU KONTROL ET? V Calýsýyor
                     }
                 }
-                
+
                 // Safety checks before adding
                 if (lMatchesList.Count > 0 && lMatchesList[0] != null)
                 {
                     if (!hMatchList.Contains(lMatchesList[0])) // Prevent infinite loop
                     {
                         Debug.Log($"Adding {lMatchesList[0].name} to hMatchList.");
-                        
+
                         hMatchList.InsertRange(insertIndex, lMatchesList);
 
                         matchQuantity[index] += upLinks + downLinks;
 
                         tempLList.Clear();
                         k += matchQuantity[index];
-                        k++;
                         continue;
                     }
                     else
@@ -472,16 +453,16 @@ public class GameManager : MonoBehaviour
             for (int y = 0; y < _gridLength.y; y++)
             {
                 // Check if tile is null
-                if (grid[x,y].GetTile() == null)
+                if (grid[x, y].GetTile() == null)
                 {
-                    if (nullList.Contains(grid[x,y]))
+                    if (nullList.Contains(grid[x, y]))
                     {
                         continue;
                     }
 
                     nullList.Add(grid[x, y]);
 
-                    int startY = y+1;
+                    int startY = y + 1;
                     while (startY < _gridLength.y)
                     {
                         if (grid[x, startY].GetTile() != null)
@@ -489,32 +470,117 @@ public class GameManager : MonoBehaviour
                             break;
                         }
                         else
-                            nullList.Add(grid[x,startY]);
-                        
+                            nullList.Add(grid[x, startY]);
+
                         startY++;
                     }
                     print("Should move grid[" + x + "," + startY + "] to grid " + x + "," + y);
 
                     int j = startY;
                     int tempY = y;
-                    while(j<_gridLength.y)
+                    while (j < _gridLength.y)
                     {
                         //if (j+1>_gridLength.y)
                         //{
                         //    //LAST ROW
                         //}
-                        
 
-                        grid[x, tempY].SetTile(grid[x,j].GetTile());
+                        // NULL ERROR
+                        // its probably cause a null object then null again while checking downwards to upwards
+                        grid[x, tempY].SetTile(grid[x, j].GetTile());
                         grid[x, j].ClearTile();
                         tempY++;
                         j++;
                     }
-                }                
+                    //List<Tile> spawnedTiles = GridManager.Instance.SpawnTile(x, startY - y);
+
+                    //for (int i = 0; i < length; i++)
+                    //{
+
+                    //}
+                }
             }
+            nullList.Clear();
+
         }
     }
-    
+
+    void SpawnNewTiles()
+    {
+        int emptyAmount = 0;
+        int tempY = 0;
+        for (int x = 0; x < _gridLength.x; x++)
+        {
+            for (int y = 0; y < _gridLength.y; y++)
+            {
+                // Check if tile is null
+                if (grid[x, y].GetTile() == null)
+                {
+                    print("First null at " + x + "," + y +" name = "+grid[x,y]);
+                    if (emptyList.Contains(grid[x, y]))
+                    {
+                        print("Continue");
+                        continue;
+                    }
+                    emptyList.Add(grid[x, y]);
+                    emptyAmount++;
+
+                    tempY = y + 1;
+                    while (tempY < _gridLength.y)
+                    {
+                        print("in while"); ;
+                        if (grid[x, tempY].GetTile() == null)
+                        {
+                            print("Added in while tilename: "+grid[x,tempY]);
+                            emptyList.Add(grid[x, tempY]);
+                            emptyAmount++;
+
+                        }
+                        // WE MAKE SURE Execute this line after sliding all objects above
+                        else
+                            print("ONE OBJECT IS NOT NULL SOMETHING WRONG");
+                        tempY++;
+                    }
+                }
+                else
+                    continue;
+
+
+                print("x = " + x + " empty count = " + emptyAmount);
+                List<Tile> spawnedTiles = new();
+                spawnedTiles = GridManager.Instance.SpawnTile(x, emptyAmount);
+                //print("SPAWNED TILES COUNT = " + spawnedTiles.Count);
+                int tileCounter = 0;
+                for (int i = y; i < _gridLength.y; i++)
+                {
+                    print("in for i= " + i);
+                    if (grid[x, i].GetTile() != null)
+                    {
+                        Debug.LogError("Cant set cause its already filled up grid " + x + "," + y);
+                        return;
+                    }
+
+                    if (spawnedTiles[tileCounter] == null)
+                    {
+                        Debug.LogError("Counter not working");
+                    }
+
+                    grid[x, i].SetTile(spawnedTiles[tileCounter],moveSpeedAfterSpawn);
+                    print("Setted grid " + x + "," + y);
+
+                    tileCounter++;
+
+                }
+
+            }
+
+            emptyAmount = 0;
+            emptyList.Clear();
+            tempY = 0;
+        }
+
+
+    }
     TileSlot GetTile(int x, int y)
     {
         return grid[x, y];
