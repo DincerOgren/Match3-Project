@@ -12,11 +12,16 @@ public class TileSlot : MonoBehaviour
     {
         GameManager.Instance.SelectTile(currentTile);
     }
-    public void SetTile(Tile tile,float speed=0)
+    public void SetTile(Tile tile,float speed=0,bool shouldSpawnInstant=false)
     {
         currentTile = tile;
         tile.index = tileIndex;
-        tile.SetSlot(this,speed); // Let the tile know its slot
+        if (shouldSpawnInstant)
+        {
+            tile.AssignSlot(this);
+        }
+        else
+            tile.SetSlot(this,speed); // Let the tile know its slot
     }
 
     public bool IsEmpty()

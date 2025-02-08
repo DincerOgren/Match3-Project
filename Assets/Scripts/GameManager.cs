@@ -50,7 +50,11 @@ public class GameManager : MonoBehaviour
 
 
         grid = GridManager.Instance.gridArray;
+
+        CheckMatchesOnStart();
     }
+
+
 
 
     #region GAME LOOP
@@ -60,14 +64,53 @@ public class GameManager : MonoBehaviour
     // DESTROY MATCHES                              V
     // REPLACE MATCHES WITH NULL                    V
     // SLIDE ABOVE TILES                            V
-    // SPAWN NEW TILES FOR EMPTY SLOTS              
-    // SLIDE THEM DOWN TOO                          
+    // SPAWN NEW TILES FOR EMPTY SLOTS              V
+    // SLIDE THEM DOWN TOO                          V
+    // Matches on Start                             V
+    // Special symbols? or spells? 
+    // implement magician
+    // shoot fireball when match
+    // add diff spells for different match counts
+    // add health systems
+    // add enemy
+    // add enemy fight back
+    //
 
-    // TOMORROW NOTE FIX DELETE TILES WHEN ITS IN LAST ROW AND FIX SPAWN TILES NOT MOVING?
-    // FIX THAT LOOP HOLE IN SPAWN TILES WHILE IT KEEP STUCK ON while(y) cause y is not increasing it should be tempY 
 
+
+    // Possible matches on start destroy them and replace them V
+
+
+    /*
+     * 1- Check Matches
+     * 2- Search L Shape
+     * 3- Destroy Objects
+     * 4- Slide above objects
+     * 5- Spawn new and replace empty slots
+     * 6- Clear Lists
+     * 
+     */
 
     #endregion
+
+    private void CheckMatchesOnStart()
+    {
+        if (!CheckMatches())
+        {
+            print("No matches in start ");
+            return;
+        }
+
+        SearchLShape();
+        DestroyMethods();
+        SlideObjectsAfterMatch(true);
+        SpawnNewTiles(true);
+        ClearLists();
+
+        print("Match Found");
+        CheckMatchesOnStart();
+
+    }
     public void SelectTile(Tile tile)
     {
         if (tileA == null)
@@ -82,7 +125,7 @@ public class GameManager : MonoBehaviour
             if (AreTilesAdjacent(tileA, tileB))
             {
                 print("Should Swap");
-                SwapTiles(tileA, tileB);
+                StartCoroutine(SwapTiles(tileA, tileB));
             }
             else
                 print("Shouldnt Swap");
@@ -98,13 +141,12 @@ public class GameManager : MonoBehaviour
 
     }
 
-    private void SwapTiles(Tile tileA, Tile tileB)
+    private IEnumerator SwapTiles(Tile tileA, Tile tileB)
     {
         // Check if they are same objects
         //inside swap
         //if (tileA.objectType == tileB.objectType)
         {
-            Vector2 aPos = tileA.GetSlot().transform.position;
 
             var aSlot = tileA.GetSlot();
             var bSlot = tileB.GetSlot();
@@ -120,6 +162,26 @@ public class GameManager : MonoBehaviour
             aSlot.SetTile(tileB);
             bSlot.SetTile(tileA);
 
+            if (!CheckMatches())
+            {
+                //Return back objects
+                print("Return  back objects");
+
+                // shgould add delay
+                yield return new WaitForSeconds(_cycleLength);
+                aSlot.SetTile(tileA);
+                bSlot.SetTile(tileB);
+            }
+            else
+            {
+                yield return new WaitForSeconds(_cycleLength);
+                MethodsAfterSwapAndMatch();
+
+                yield return new WaitForSeconds(_cycleLength);
+
+                StartCoroutine(CheckMatchesAfterNewReplacement());
+            }
+
         }
         //else
         {
@@ -127,6 +189,35 @@ public class GameManager : MonoBehaviour
             // swap but return back object;
 
         }
+    }
+
+    IEnumerator CheckMatchesAfterNewReplacement()
+    {
+        if (!CheckMatches())
+        {
+            //Match yok
+            print("NO MATCH AFTER REPLACE");
+            yield break;
+        }
+        else
+        {
+            print("Match after replace");
+            yield return new WaitForSeconds(_cycleLength);
+            MethodsAfterSwapAndMatch();
+            yield return new WaitForSeconds(_cycleLength);
+            StartCoroutine(CheckMatchesAfterNewReplacement());
+        }
+
+
+        //CheckMatchesAfterNewReplacement();
+    }
+    private void MethodsAfterSwapAndMatch()
+    {
+        SearchLShape();
+        DestroyMethods();
+        SlideObjectsAfterMatch();
+        SpawnNewTiles();
+        ClearLists();
     }
 
     private bool AreTilesAdjacent(Tile tileA, Tile tileB)
@@ -153,13 +244,17 @@ public class GameManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            print("Try matches");
-            CheckMatches();
+            print("Try matches = " + CheckMatches());
+            //CheckMatches();
         }
 
         if (Input.GetKeyDown(KeyCode.W))
         {
             SearchLShape();
+        }
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            CheckMatchesAfterNewReplacement();
         }
         if (Input.GetKeyDown(KeyCode.Q))
         {
@@ -169,29 +264,36 @@ public class GameManager : MonoBehaviour
         {
             SpawnNewTiles();
         }
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-
-            GridManager.Instance.SpawnTile(0,5);
-        }
 
         if (Input.GetKeyDown(KeyCode.E))
         {
-            DestroyHorizontalNLShape();
-            DestroyVerticals();
+            DestroyMethods();
         }
 
         if (Input.GetKeyDown(KeyCode.S))
         {
-            hMatchList.Clear();
-            lMatchesList.Clear();
-            vMatchList.Clear();
-            matchQuantity.Clear();
+            ClearLists();
         }
     }
 
-    void CheckMatches()
+    private void DestroyMethods()
     {
+        DestroyHorizontalNLShape();
+        DestroyVerticals();
+    }
+
+    private void ClearLists()
+    {
+        hMatchList.Clear();
+        lMatchesList.Clear();
+        vMatchList.Clear();
+        matchQuantity.Clear();
+    }
+
+    bool CheckMatches()
+    {
+        bool horizontalMatch = false;
+        bool verticalMatch = false;
         TileSlot firstTile;
         if (checkHorizontalMatches)
         {
@@ -201,12 +303,12 @@ public class GameManager : MonoBehaviour
             //length -2 ?
             for (int y = 0; y < _gridLength.y; y++)
             {
-                print("in most up for :" + y);
+                //print("in most up for :" + y);
                 int row = 0;
 
                 while (row <= _gridLength.x - 2)
                 {
-                    print("in while row : " + row);
+                    //print("in while row : " + row);
 
                     firstTile = grid[row, y];
 
@@ -220,7 +322,7 @@ public class GameManager : MonoBehaviour
 
                     for (int i = row + 1; i < _gridLength.x; i++)
                     {
-                        print("in for : " + i);
+                        //print("in for : " + i);
                         if (firstTile.GetTile().objectType == grid[i, y].GetTile().objectType)
                         {
                             tempMatchList.Add(grid[i, y]);
@@ -234,7 +336,8 @@ public class GameManager : MonoBehaviour
 
                     if (rightLink >= 2)
                     {
-                        print("match found after for");
+                        //print("match found after for");
+                        horizontalMatch = true;
                         hMatchList.AddRange(tempMatchList);
 
                         matchQuantity.Add(rightLink + 1);
@@ -264,12 +367,12 @@ public class GameManager : MonoBehaviour
             //Vertical 
             for (int x = 0; x < _gridLength.x; x++)
             {
-                print("in most up for vertical :" + x);
+                // print("in most up for vertical :" + x);
                 int column = 0;
 
                 while (column <= _gridLength.y - 2)
                 {
-                    print("checking vertical matches for grid[" + x + "," + column + "]");
+                    //   print("checking vertical matches for grid[" + x + "," + column + "]");
 
                     firstTile = grid[x, column];
 
@@ -283,7 +386,7 @@ public class GameManager : MonoBehaviour
 
                     for (int i = column + 1; i < _gridLength.y; i++)
                     {
-                        print("in vertical for : " + i);
+                        // print("in vertical for : " + i);
                         if (firstTile.GetTile().objectType == grid[x, i].GetTile().objectType)
                         {
                             tempMatchList.Add(grid[x, i]);
@@ -297,9 +400,9 @@ public class GameManager : MonoBehaviour
 
                     if (upLink >= 2)
                     {
-                        print("vertical match found after for");
+                        //print("vertical match found after for");
                         vMatchList.AddRange(tempMatchList);
-
+                        verticalMatch = true;
                     }
 
                     upLink = 0;
@@ -311,6 +414,8 @@ public class GameManager : MonoBehaviour
             }
         }
 
+
+        return horizontalMatch || verticalMatch;
     }
 
     private void DestroyHorizontalNLShape()
@@ -352,17 +457,17 @@ public class GameManager : MonoBehaviour
             //find up links 
             TileSlot currentSlot = hMatchList[k];
 
-            print("while k = " + k + " Tile is = " + currentSlot.name);
+            //print("while k = " + k + " Tile is = " + currentSlot.name);
 
             for (int i = currentSlot.tileIndex.y + 1; i <= _gridLength.y - 1; i++)
             {
-                print("i = " + i + " calculated value = " + (_gridLength.y - currentSlot.tileIndex.y));
+                //print("i = " + i + " calculated value = " + (_gridLength.y - currentSlot.tileIndex.y));
 
                 if (grid[currentSlot.tileIndex.x, i].GetTile().objectType == currentSlot.GetTile().objectType)
                 {
                     upLinks++;
                     tempLList.Add(grid[currentSlot.tileIndex.x, i]);
-                    print(currentSlot.name + " icin " + "uplink bulundu adi : " + grid[currentSlot.tileIndex.x, i].name);
+                  //  print(currentSlot.name + " icin " + "uplink bulundu adi : " + grid[currentSlot.tileIndex.x, i].name);
                 }
                 else
                     break;
@@ -372,13 +477,13 @@ public class GameManager : MonoBehaviour
 
             for (int i = currentSlot.tileIndex.y - 1; i >= 0; i--)
             {
-                print("i = " + i + " on downliinkm");
+                //print("i = " + i + " on downliinkm");
 
                 if (grid[currentSlot.tileIndex.x, i].GetTile().objectType == currentSlot.GetTile().objectType)
                 {
                     downLinks++;
                     tempLList.Add(grid[currentSlot.tileIndex.x, i]);
-                    print(currentSlot.name + " icin " + "downlink bulundu adi : " + grid[currentSlot.tileIndex.x, i].name);
+                    //print(currentSlot.name + " icin " + "downlink bulundu adi : " + grid[currentSlot.tileIndex.x, i].name);
 
                 }
                 else
@@ -387,7 +492,7 @@ public class GameManager : MonoBehaviour
 
             if (upLinks + downLinks >= 2)
             {
-                print("We find a L shape match");
+                //print("We find a L shape match");
                 lMatchesList = new(tempLList);
 
 
@@ -411,7 +516,7 @@ public class GameManager : MonoBehaviour
                 {
                     if (!hMatchList.Contains(lMatchesList[0])) // Prevent infinite loop
                     {
-                        Debug.Log($"Adding {lMatchesList[0].name} to hMatchList.");
+                        //Debug.Log($"Adding {lMatchesList[0].name} to hMatchList.");
 
                         hMatchList.InsertRange(insertIndex, lMatchesList);
 
@@ -444,9 +549,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void SlideObjectsAfterMatch()
+    void SlideObjectsAfterMatch(bool shouldSetInstant = false)
     {
-        List<TileSlot> nullList = new();
+        List<TileSlot> aboveList = new();
 
         for (int x = 0; x < _gridLength.x; x++)
         {
@@ -455,12 +560,12 @@ public class GameManager : MonoBehaviour
                 // Check if tile is null
                 if (grid[x, y].GetTile() == null)
                 {
-                    if (nullList.Contains(grid[x, y]))
+                    if (aboveList.Contains(grid[x, y]))
                     {
                         continue;
                     }
 
-                    nullList.Add(grid[x, y]);
+                    aboveList.Add(grid[x, y]);
 
                     int startY = y + 1;
                     while (startY < _gridLength.y)
@@ -470,11 +575,11 @@ public class GameManager : MonoBehaviour
                             break;
                         }
                         else
-                            nullList.Add(grid[x, startY]);
+                            aboveList.Add(grid[x, startY]);
 
                         startY++;
                     }
-                    print("Should move grid[" + x + "," + startY + "] to grid " + x + "," + y);
+                    //print("Should move grid[" + x + "," + startY + "] to grid " + x + "," + y);
 
                     int j = startY;
                     int tempY = y;
@@ -487,8 +592,21 @@ public class GameManager : MonoBehaviour
 
                         // NULL ERROR
                         // its probably cause a null object then null again while checking downwards to upwards
-                        grid[x, tempY].SetTile(grid[x, j].GetTile());
+                        if (grid[x, j].GetTile() == null)
+                        {
+                            j++;
+                            continue;
+                        }
+                        if (shouldSetInstant)
+                        {
+                            grid[x, tempY].SetTile(grid[x, j].GetTile(), 0, true);
+                        }
+                        else
+                            grid[x, tempY].SetTile(grid[x, j].GetTile());
+
                         grid[x, j].ClearTile();
+
+
                         tempY++;
                         j++;
                     }
@@ -500,12 +618,12 @@ public class GameManager : MonoBehaviour
                     //}
                 }
             }
-            nullList.Clear();
+            aboveList.Clear();
 
         }
     }
 
-    void SpawnNewTiles()
+    void SpawnNewTiles(bool shouldSpawnInstant = false)
     {
         int emptyAmount = 0;
         int tempY = 0;
@@ -516,10 +634,10 @@ public class GameManager : MonoBehaviour
                 // Check if tile is null
                 if (grid[x, y].GetTile() == null)
                 {
-                    print("First null at " + x + "," + y +" name = "+grid[x,y]);
+                    //print("First null at " + x + "," + y + " name = " + grid[x, y]);
                     if (emptyList.Contains(grid[x, y]))
                     {
-                        print("Continue");
+                        //print("Continue");
                         continue;
                     }
                     emptyList.Add(grid[x, y]);
@@ -528,10 +646,10 @@ public class GameManager : MonoBehaviour
                     tempY = y + 1;
                     while (tempY < _gridLength.y)
                     {
-                        print("in while"); ;
+                       // print("in while"); ;
                         if (grid[x, tempY].GetTile() == null)
                         {
-                            print("Added in while tilename: "+grid[x,tempY]);
+                          //  print("Added in while tilename: " + grid[x, tempY]);
                             emptyList.Add(grid[x, tempY]);
                             emptyAmount++;
 
@@ -546,14 +664,14 @@ public class GameManager : MonoBehaviour
                     continue;
 
 
-                print("x = " + x + " empty count = " + emptyAmount);
+                //print("x = " + x + " empty count = " + emptyAmount);
                 List<Tile> spawnedTiles = new();
                 spawnedTiles = GridManager.Instance.SpawnTile(x, emptyAmount);
                 //print("SPAWNED TILES COUNT = " + spawnedTiles.Count);
                 int tileCounter = 0;
                 for (int i = y; i < _gridLength.y; i++)
                 {
-                    print("in for i= " + i);
+                  //  print("in for i= " + i);
                     if (grid[x, i].GetTile() != null)
                     {
                         Debug.LogError("Cant set cause its already filled up grid " + x + "," + y);
@@ -565,8 +683,17 @@ public class GameManager : MonoBehaviour
                         Debug.LogError("Counter not working");
                     }
 
-                    grid[x, i].SetTile(spawnedTiles[tileCounter],moveSpeedAfterSpawn);
-                    print("Setted grid " + x + "," + y);
+                    if (shouldSpawnInstant)
+                    {
+                        grid[x, i].SetTile(spawnedTiles[tileCounter], 0, true);
+
+                    }
+                    else
+                    {
+                        grid[x, i].SetTile(spawnedTiles[tileCounter], moveSpeedAfterSpawn);
+
+                    }
+                   // print("Setted grid " + x + "," + y);
 
                     tileCounter++;
 
