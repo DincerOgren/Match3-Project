@@ -635,19 +635,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cycleLength: 0.3
-  _gridLength: {x: 4, y: 4}
+  _gridLength: {x: 3, y: 3}
   checkHorizontalMatches: 1
   checkVerticalMatches: 1
   moveSpeedAfterSpawn: 0.5
   tileA: {fileID: 0}
   tileB: {fileID: 0}
-  matchQuantity: 
+  matchAmountForX: 
+  matchAmountForY: 
   hMatchList: []
   vMatchList: []
   tempMatchList: []
   tempLList: []
   lMatchesList: []
   emptyList: []
+  suggestRightList: []
+  suggestUpList: []
+  scaleMultiplier: 1.2
+  suggestCycleLength: 0.75
 --- !u!1 &2090714452
 GameObject:
   m_ObjectHideFlags: 0

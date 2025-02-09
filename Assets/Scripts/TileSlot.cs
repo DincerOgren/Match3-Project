@@ -12,7 +12,7 @@ public class TileSlot : MonoBehaviour
     {
         GameManager.Instance.SelectTile(currentTile);
     }
-    public void SetTile(Tile tile,float speed=0,bool shouldSpawnInstant=false)
+    public void SetTile(Tile tile,bool shouldSpawnInstant=false, float speed = 0)
     {
         currentTile = tile;
         tile.index = tileIndex;

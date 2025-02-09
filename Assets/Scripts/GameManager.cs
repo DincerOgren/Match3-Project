@@ -23,7 +23,8 @@ public class GameManager : MonoBehaviour
 
     TileSlot[,] grid;
 
-    public List<int> matchQuantity;
+    public List<int> matchAmountForX;
+    public List<int> matchAmountForY;
 
     public List<TileSlot> hMatchList;
     public List<TileSlot> vMatchList;
@@ -31,6 +32,16 @@ public class GameManager : MonoBehaviour
     public List<TileSlot> tempLList;
     public List<TileSlot> lMatchesList;
     public List<TileSlot> emptyList;
+
+    [Header("Suggest Section")]
+    public List<Tile> suggestRightList;
+    public List<Tile> suggestUpList;
+
+    public List<int> suggestRightAmount;
+    public List<int> suggestUpAmount;
+
+    public float scaleMultiplier = 1.5f;
+    public float suggestCycleLength = .5f;
 
     private void Awake()
     {
@@ -67,6 +78,8 @@ public class GameManager : MonoBehaviour
     // SPAWN NEW TILES FOR EMPTY SLOTS              V
     // SLIDE THEM DOWN TOO                          V
     // Matches on Start                             V
+    // Possible matches on start destroy them and replace them V
+    // Suggest Matches                              -
     // Special symbols? or spells? 
     // implement magician
     // shoot fireball when match
@@ -77,8 +90,12 @@ public class GameManager : MonoBehaviour
     //
 
 
+    // TOMORROW START WITH SUGGEST SECTION U MIGHT NEED TO ADD AmountLists for them too 
+    // cause you cant really detect 1 match for suggest u actually suggest all possible matches inside lists
+    // maybe create a some logic after finding matches and  amounts 
+    // so it can randomly select h or v list and randomly choose match inside them =?
+    // 
 
-    // Possible matches on start destroy them and replace them V
 
 
     /*
@@ -191,6 +208,214 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void SwapTiles(TileSlot slotA, TileSlot slotB, bool suggestForRight = true)
+    {
+        if (slotA.GetTile() == null || slotB.GetTile() == null)
+        {
+            Debug.LogError("Some tiles are empty");
+            return;
+        }
+        var aTile = slotA.GetTile();
+        var bTile = slotB.GetTile();
+
+        slotA.SetTile(bTile);
+        slotB.SetTile(aTile);
+
+        if (!CheckMatches())
+        {
+            slotA.SetTile(aTile);
+            slotB.SetTile(bTile);
+            //No matches after switch
+            print("No Matches after switching " + slotA.name + " - " + slotB.name);
+            ClearLists();
+            return;
+        }
+
+        {
+
+            
+            print("Matches found after switching " + slotA.name + " - " + slotB.name + " for right= " + suggestForRight);
+
+            // if (suggestForRight)
+            {
+                if (hMatchList.Contains(slotA))
+                {
+                    print("SLOT A FOR H");
+                    CheckSuggestMatch(slotA, hMatchList, matchAmountForX, suggestRightList);
+
+                }
+                if (vMatchList.Contains(slotA))
+                {
+                    print("SLOT A FOR V");
+
+                    CheckSuggestMatch(slotA, vMatchList, matchAmountForY, suggestUpList, true);
+
+                }
+
+                if (hMatchList.Contains(slotB))
+                {
+                    print("SLOT B FOR H");
+
+                    CheckSuggestMatch(slotB, hMatchList, matchAmountForX, suggestRightList);
+
+                }
+                if (vMatchList.Contains(slotB))
+                {
+                    print("SLOT B FOR V");
+
+                    CheckSuggestMatch(slotB, vMatchList, matchAmountForY, suggestUpList, true);
+
+                }
+
+            }
+            //else
+            //{
+            //    if (hMatchList.Contains(slotA) || vMatchList.Contains(slotA))
+            //    {
+
+            //        suggestUpList.Add(slotA);
+            //    }
+            //    if (hMatchList.Contains(slotB) || vMatchList.Contains(slotB))
+            //    {
+
+            //        suggestUpList.Add(slotB);
+
+            //    }
+            //}
+
+            slotA.SetTile(aTile);
+            slotB.SetTile(bTile);
+            ClearLists();
+        }
+    }
+
+    private void CheckSuggestMatch(TileSlot slot, List<TileSlot> slotList, List<int> amountList, List<Tile> toAddList, bool forUpLink = false)
+    {
+        //int index = hMatchList.IndexOf(slotA);
+        //int yIndex = slotA.tileIndex.y;
+        //int temp = 0;
+        //for (int i = 0; i < matchAmountForX.Count; i++)
+        //{
+        //    temp += matchAmountForX[i];
+        //    if (temp > index)
+        //    {
+        //        temp -= matchAmountForX[i];
+
+        //        for (int j = 0; j < matchAmountForX[i]; j++)
+        //        {
+        //            suggestRightList.Add(grid[temp + j, yIndex]);
+        //        }
+        //    }
+        //}  
+        int matchAmount = 0;
+        if (forUpLink)
+        {
+            int index = slotList.IndexOf(slot);
+            int xIndex = slot.tileIndex.x;
+            int temp = 0;
+            for (int i = 0; i < amountList.Count; i++)
+            {
+                temp += amountList[i];
+                if (temp > index)
+                {
+                    temp -= amountList[i];
+
+                    for (int j = 0; j < amountList[i]; j++)
+                    {
+                        //if (grid[xIndex, temp + j].GetTile().objectType != tile.objectType)
+                        {
+                            print("originalSlotsTile = "+slot.GetTile().objectType);
+                            print("slots tile = " + xIndex + "," + temp + j + " tiles type = " + grid[xIndex, temp + j].GetTile().objectType);
+                            //toAddList.Add(tile);
+                            //continue;
+                        }
+                        matchAmount++;
+                        toAddList.Add(grid[xIndex, temp + j].GetTile());
+                    }
+                    suggestUpAmount.Add(matchAmount);
+                    matchAmount = 0;
+                }
+            }
+
+        }
+        else
+        {
+            int index = slotList.IndexOf(slot);
+            int yIndex = slot.tileIndex.y;
+            int temp = 0;
+            for (int i = 0; i < amountList.Count; i++)
+            {
+                temp += amountList[i];
+                if (temp > index)
+                {
+                    temp -= amountList[i];
+
+                    for (int j = 0; j < amountList[i]; j++)
+                    {
+                        //if (grid[temp + j, yIndex].GetTile().objectType != tile.objectType)
+                        {
+                            print("originalSlotsTile = " + slot.GetTile().objectType);
+                            print("slots tile = " + yIndex + "," + temp + j + " tiles type = " + grid[temp + j, yIndex].GetTile().objectType);
+                            matchAmount++;
+                        }
+                        toAddList.Add(grid[temp + j, yIndex].GetTile());
+                    }
+
+                    suggestRightAmount.Add(matchAmount);
+                    matchAmount = 0;
+                }
+            }
+        }
+
+        ChooseRandomMatchToAnimate();
+        SuggestAnimation();
+
+    }
+
+    private void ChooseRandomMatchToAnimate()
+    {
+        int random = UnityEngine.Random.Range(1, 3);
+
+        if (suggestUpList.Count < 3)
+        {
+            // Go with right list
+
+            return;
+        }
+        if(suggestRightList.Count < 3)
+        {
+
+            // Go with up list
+            return;
+        }
+
+        if (random == 1 )
+        {
+            //Suggest in up link
+
+        }
+        else if (random == 2)
+        {
+            // suggest in rightlink
+        }
+        else
+            Debug.LogError("Something wrong random = " + random);
+    }
+
+    private void SuggestAnimation()
+    {
+        for (int i = 0; i < suggestRightList.Count; i++)
+        {
+            suggestRightList[i].transform.DOScale(scaleMultiplier,suggestCycleLength).SetLoops(-1, LoopType.Yoyo);
+        }
+
+        for (int j = 0; j < suggestUpList.Count ; j++)
+        {
+            suggestUpList[j].transform.DOScale(scaleMultiplier, suggestCycleLength).SetLoops(-1,LoopType.Yoyo);
+
+        }
+    }
+
     IEnumerator CheckMatchesAfterNewReplacement()
     {
         if (!CheckMatches())
@@ -210,6 +435,41 @@ public class GameManager : MonoBehaviour
 
 
         //CheckMatchesAfterNewReplacement();
+    }
+
+    void SuggestMatch()
+    {
+
+
+        for (int y = 0; y < _gridLength.y; y++)
+        {
+            for (int x = 0; x < _gridLength.x; x++)
+            {
+                if (x + 1 >= _gridLength.x && y + 1 >= _gridLength.y)
+                {
+                    break;
+                }
+
+                if (x + 1 >= _gridLength.x)
+                {
+                    SwapTiles(grid[x, y], grid[x, y + 1], false);
+                    continue;
+                }
+
+                if (y + 1 >= _gridLength.y)
+                {
+                    SwapTiles(grid[x, y], grid[x + 1, y]);
+                    continue;
+                }
+                
+
+                // Check Right First
+                SwapTiles(grid[x, y], grid[x + 1, y]);
+                // Check UP 
+                SwapTiles(grid[x, y], grid[x, y + 1], false);
+            }
+
+        }
     }
     private void MethodsAfterSwapAndMatch()
     {
@@ -254,7 +514,7 @@ public class GameManager : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.A))
         {
-            CheckMatchesAfterNewReplacement();
+            SuggestMatch();
         }
         if (Input.GetKeyDown(KeyCode.Q))
         {
@@ -287,7 +547,8 @@ public class GameManager : MonoBehaviour
         hMatchList.Clear();
         lMatchesList.Clear();
         vMatchList.Clear();
-        matchQuantity.Clear();
+        matchAmountForX.Clear();
+        matchAmountForY.Clear();
     }
 
     bool CheckMatches()
@@ -340,7 +601,7 @@ public class GameManager : MonoBehaviour
                         horizontalMatch = true;
                         hMatchList.AddRange(tempMatchList);
 
-                        matchQuantity.Add(rightLink + 1);
+                        matchAmountForX.Add(rightLink + 1);
 
                     }
 
@@ -403,6 +664,7 @@ public class GameManager : MonoBehaviour
                         //print("vertical match found after for");
                         vMatchList.AddRange(tempMatchList);
                         verticalMatch = true;
+                        matchAmountForY.Add(upLink + 1);
                     }
 
                     upLink = 0;
@@ -467,7 +729,7 @@ public class GameManager : MonoBehaviour
                 {
                     upLinks++;
                     tempLList.Add(grid[currentSlot.tileIndex.x, i]);
-                  //  print(currentSlot.name + " icin " + "uplink bulundu adi : " + grid[currentSlot.tileIndex.x, i].name);
+                    //  print(currentSlot.name + " icin " + "uplink bulundu adi : " + grid[currentSlot.tileIndex.x, i].name);
                 }
                 else
                     break;
@@ -500,9 +762,9 @@ public class GameManager : MonoBehaviour
                 int index = 0;
 
                 // Calculating where to insert L Shapes in matchlist 
-                for (int i = 0; i < matchQuantity.Count; i++)
+                for (int i = 0; i < matchAmountForX.Count; i++)
                 {
-                    insertIndex += matchQuantity[i];
+                    insertIndex += matchAmountForX[i];
                     if (insertIndex > k)
                     {
                         index = i;
@@ -520,10 +782,10 @@ public class GameManager : MonoBehaviour
 
                         hMatchList.InsertRange(insertIndex, lMatchesList);
 
-                        matchQuantity[index] += upLinks + downLinks;
+                        matchAmountForX[index] += upLinks + downLinks;
 
                         tempLList.Clear();
-                        k += matchQuantity[index];
+                        k += matchAmountForX[index];
                         continue;
                     }
                     else
@@ -599,7 +861,7 @@ public class GameManager : MonoBehaviour
                         }
                         if (shouldSetInstant)
                         {
-                            grid[x, tempY].SetTile(grid[x, j].GetTile(), 0, true);
+                            grid[x, tempY].SetTile(grid[x, j].GetTile(), true);
                         }
                         else
                             grid[x, tempY].SetTile(grid[x, j].GetTile());
@@ -646,10 +908,10 @@ public class GameManager : MonoBehaviour
                     tempY = y + 1;
                     while (tempY < _gridLength.y)
                     {
-                       // print("in while"); ;
+                        // print("in while"); ;
                         if (grid[x, tempY].GetTile() == null)
                         {
-                          //  print("Added in while tilename: " + grid[x, tempY]);
+                            //  print("Added in while tilename: " + grid[x, tempY]);
                             emptyList.Add(grid[x, tempY]);
                             emptyAmount++;
 
@@ -671,7 +933,7 @@ public class GameManager : MonoBehaviour
                 int tileCounter = 0;
                 for (int i = y; i < _gridLength.y; i++)
                 {
-                  //  print("in for i= " + i);
+                    //  print("in for i= " + i);
                     if (grid[x, i].GetTile() != null)
                     {
                         Debug.LogError("Cant set cause its already filled up grid " + x + "," + y);
@@ -685,15 +947,15 @@ public class GameManager : MonoBehaviour
 
                     if (shouldSpawnInstant)
                     {
-                        grid[x, i].SetTile(spawnedTiles[tileCounter], 0, true);
+                        grid[x, i].SetTile(spawnedTiles[tileCounter], true);
 
                     }
                     else
                     {
-                        grid[x, i].SetTile(spawnedTiles[tileCounter], moveSpeedAfterSpawn);
+                        grid[x, i].SetTile(spawnedTiles[tileCounter], false, moveSpeedAfterSpawn);
 
                     }
-                   // print("Setted grid " + x + "," + y);
+                    // print("Setted grid " + x + "," + y);
 
                     tileCounter++;
 
