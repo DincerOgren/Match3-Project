@@ -616,7 +616,7 @@ Transform:
   m_GameObject: {fileID: 1776576406}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.27, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -635,10 +635,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cycleLength: 0.3
-  _gridLength: {x: 3, y: 3}
+  _gridLength: {x: 4, y: 4}
   checkHorizontalMatches: 1
   checkVerticalMatches: 1
   moveSpeedAfterSpawn: 0.5
+  blockObject: {fileID: 0}
+  canSwap: 1
   tileA: {fileID: 0}
   tileB: {fileID: 0}
   matchAmountForX: 
@@ -649,10 +651,18 @@ MonoBehaviour:
   tempLList: []
   lMatchesList: []
   emptyList: []
+  isPlayerInactive: 1
+  isCountingToSuggest: 1
+  suggesTime: 2
+  suggestTimer: 0
   suggestRightList: []
   suggestUpList: []
+  suggestRightAmount: 
+  suggestUpAmount: 
+  suggestedTiles: []
   scaleMultiplier: 1.2
   suggestCycleLength: 0.75
+  isAlreadyAnimatingSuggestedTiles: 0
 --- !u!1 &2090714452
 GameObject:
   m_ObjectHideFlags: 0
@@ -678,7 +688,7 @@ Transform:
   m_GameObject: {fileID: 2090714452}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.8, y: -3.01, z: 0}
+  m_LocalPosition: {x: -1.9, y: -0.8, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

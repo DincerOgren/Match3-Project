@@ -16,6 +16,9 @@ public class GameManager : MonoBehaviour
     public bool checkVerticalMatches = true;
 
     public float moveSpeedAfterSpawn = 0.1f;
+    [Header("Touch Block")]
+    public GameObject blockObject;
+    public bool canSwap = true;
 
     public Tile tileA;
     public Tile tileB;
@@ -34,14 +37,21 @@ public class GameManager : MonoBehaviour
     public List<TileSlot> emptyList;
 
     [Header("Suggest Section")]
+    public bool isPlayerInactive = true;
+    public bool isCountingToSuggest = true;
+    public float suggesTime = 2f;
+    public float suggestTimer = 0;
     public List<Tile> suggestRightList;
     public List<Tile> suggestUpList;
 
     public List<int> suggestRightAmount;
     public List<int> suggestUpAmount;
 
+    public List<Tile> suggestedTiles;
+
     public float scaleMultiplier = 1.5f;
     public float suggestCycleLength = .5f;
+    public bool isAlreadyAnimatingSuggestedTiles = false;
 
     private void Awake()
     {
@@ -80,6 +90,11 @@ public class GameManager : MonoBehaviour
     // Matches on Start                             V
     // Possible matches on start destroy them and replace them V
     // Suggest Matches                              -
+    // suggest with time 
+    // REPLACE MAP WHEN NO MATCH
+
+
+
     // Special symbols? or spells? 
     // implement magician
     // shoot fireball when match
@@ -90,11 +105,15 @@ public class GameManager : MonoBehaviour
     //
 
 
-    // TOMORROW START WITH SUGGEST SECTION U MIGHT NEED TO ADD AmountLists for them too 
-    // cause you cant really detect 1 match for suggest u actually suggest all possible matches inside lists
-    // maybe create a some logic after finding matches and  amounts 
-    // so it can randomly select h or v list and randomly choose match inside them =?
-    // 
+    // New Error appeared -> When L Shape includes another horizontal match it is giving null error 
+    // Visual ->   x x x z 
+    //             y x y z    
+    //             y x x x
+    //
+    // i think i fixed but i have to make this scneario again to test it 
+    //
+    //
+    // TOMORROW TO DO -> Finish the basic game loop and save this project for basic match 3 prototype
 
 
 
@@ -118,7 +137,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        SearchLShape();
+        //SearchLShape();
         DestroyMethods();
         SlideObjectsAfterMatch(true);
         SpawnNewTiles(true);
@@ -130,6 +149,11 @@ public class GameManager : MonoBehaviour
     }
     public void SelectTile(Tile tile)
     {
+
+        StopSuggest();
+
+
+
         if (tileA == null)
         {
             tileA = tile;
@@ -142,6 +166,7 @@ public class GameManager : MonoBehaviour
             if (AreTilesAdjacent(tileA, tileB))
             {
                 print("Should Swap");
+                canSwap = false;
                 StartCoroutine(SwapTiles(tileA, tileB));
             }
             else
@@ -153,8 +178,37 @@ public class GameManager : MonoBehaviour
             tileB.HighlightTile(false);
             tileA = null;
             tileB = null;
+            ResetSuggestTimer();
+
         }
 
+
+    }
+
+    void ResetSuggestTimer()
+    {
+        suggestTimer = 0;
+    }
+
+    void StopSuggest()
+    {
+        KillTweens();
+        ClearSuggestLists();
+        isPlayerInactive = false;
+    }
+    void SuggestMatchWithTime()
+    {
+
+        if (suggestTimer > suggesTime && !isAlreadyAnimatingSuggestedTiles && isPlayerInactive)
+        {
+            Debug.LogWarning("Suggest Now");
+            SuggestMatch();
+        }
+        else if (canSwap)
+        {
+
+            suggestTimer += Time.deltaTime;
+        }
 
     }
 
@@ -185,9 +239,11 @@ public class GameManager : MonoBehaviour
                 print("Return  back objects");
 
                 // shgould add delay
-                yield return new WaitForSeconds(_cycleLength);
-                aSlot.SetTile(tileA);
-                bSlot.SetTile(tileB);
+                //yield return new WaitForSeconds(_cycleLength);
+                //aSlot.SetTile(tileA);
+                //bSlot.SetTile(tileB);
+                //yield return new WaitForSeconds(_cycleLength);
+                canSwap = true;
             }
             else
             {
@@ -218,25 +274,24 @@ public class GameManager : MonoBehaviour
         var aTile = slotA.GetTile();
         var bTile = slotB.GetTile();
 
-        slotA.SetTile(bTile);
-        slotB.SetTile(aTile);
+        slotA.SetTile(bTile, true);
+        slotB.SetTile(aTile, true);
 
         if (!CheckMatches())
         {
-            slotA.SetTile(aTile);
-            slotB.SetTile(bTile);
+            slotA.SetTile(aTile, true);
+            slotB.SetTile(bTile, true);
             //No matches after switch
-            print("No Matches after switching " + slotA.name + " - " + slotB.name);
+            //print("No Matches after switching " + slotA.name + " - " + slotB.name);
             ClearLists();
             return;
         }
 
         {
 
-            
+
             print("Matches found after switching " + slotA.name + " - " + slotB.name + " for right= " + suggestForRight);
 
-            // if (suggestForRight)
             {
                 if (hMatchList.Contains(slotA))
                 {
@@ -267,6 +322,7 @@ public class GameManager : MonoBehaviour
 
                 }
 
+
             }
             //else
             //{
@@ -283,58 +339,64 @@ public class GameManager : MonoBehaviour
             //    }
             //}
 
-            slotA.SetTile(aTile);
-            slotB.SetTile(bTile);
+            slotA.SetTile(aTile, true);
+            slotB.SetTile(bTile, true);
             ClearLists();
         }
     }
 
     private void CheckSuggestMatch(TileSlot slot, List<TileSlot> slotList, List<int> amountList, List<Tile> toAddList, bool forUpLink = false)
     {
-        //int index = hMatchList.IndexOf(slotA);
-        //int yIndex = slotA.tileIndex.y;
-        //int temp = 0;
-        //for (int i = 0; i < matchAmountForX.Count; i++)
-        //{
-        //    temp += matchAmountForX[i];
-        //    if (temp > index)
-        //    {
-        //        temp -= matchAmountForX[i];
 
-        //        for (int j = 0; j < matchAmountForX[i]; j++)
-        //        {
-        //            suggestRightList.Add(grid[temp + j, yIndex]);
-        //        }
-        //    }
-        //}  
         int matchAmount = 0;
+
+        var tile = slot.GetTile();
         if (forUpLink)
         {
             int index = slotList.IndexOf(slot);
             int xIndex = slot.tileIndex.x;
             int temp = 0;
+            print("Before for index =" + index);
             for (int i = 0; i < amountList.Count; i++)
             {
                 temp += amountList[i];
+                print("in for temp = " + temp + " amount count = " + amountList.Count);
+
                 if (temp > index)
                 {
                     temp -= amountList[i];
+
+                    //int yIndexStart = 0;
+                    //if (i+1==amountList.Count && temp !=0)
+                    //{
+                    //    yIndexStart = slotList[temp].tileIndex.y;
+                    //    Debug.LogWarning("Last Object with temp = "+ temp);
+                    //}
+                    //else
+                    int yIndexStart = slotList[temp].tileIndex.y;
 
                     for (int j = 0; j < amountList[i]; j++)
                     {
                         //if (grid[xIndex, temp + j].GetTile().objectType != tile.objectType)
                         {
-                            print("originalSlotsTile = "+slot.GetTile().objectType);
-                            print("slots tile = " + xIndex + "," + temp + j + " tiles type = " + grid[xIndex, temp + j].GetTile().objectType);
+                            print("originalSlotsTile = " + slot.GetTile().objectType);
+                            // print("slots tile = " + xIndex + "," + temp + j + " tiles type = " + grid[xIndex, temp + j].GetTile().objectType);
                             //toAddList.Add(tile);
                             //continue;
                         }
                         matchAmount++;
-                        toAddList.Add(grid[xIndex, temp + j].GetTile());
+                        print("Temp = " + temp + " and J =" + j + " for x" + " index = " + index + " xindex = " + xIndex + " yIndex = " + yIndexStart);
+                        // 
+
+                        //this not working either toAddList.Add(slotList[temp + j].GetTile());
+                        //toAddList.Add(grid[xIndex, temp + j].GetTile());
+                        toAddList.Add(grid[xIndex, yIndexStart + j].GetTile());
                     }
                     suggestUpAmount.Add(matchAmount);
                     matchAmount = 0;
+                    break; //?
                 }
+
             }
 
         }
@@ -348,27 +410,34 @@ public class GameManager : MonoBehaviour
                 temp += amountList[i];
                 if (temp > index)
                 {
-                    temp -= amountList[i];
 
+                    temp -= amountList[i];
+                    int xIndexStart = slotList[temp].tileIndex.x;
                     for (int j = 0; j < amountList[i]; j++)
                     {
                         //if (grid[temp + j, yIndex].GetTile().objectType != tile.objectType)
                         {
                             print("originalSlotsTile = " + slot.GetTile().objectType);
-                            print("slots tile = " + yIndex + "," + temp + j + " tiles type = " + grid[temp + j, yIndex].GetTile().objectType);
-                            matchAmount++;
+                            // print("slots tile = " + yIndex + "," + temp + j + " tiles type = " + grid[temp + j, yIndex].GetTile().objectType);
                         }
-                        toAddList.Add(grid[temp + j, yIndex].GetTile());
+                        print("Temp = " + temp + " and J =" + j + " for x" + " index = " + index + " yindex = " + yIndex + "xIndex = " + xIndexStart);
+
+                        //toAddList.Add(slotList[temp + j].GetTile());
+                        //toAddList.Add(grid[temp + j, yIndex].GetTile());
+                        toAddList.Add(grid[xIndexStart + j, yIndex].GetTile());
+
+                        matchAmount++;
                     }
 
                     suggestRightAmount.Add(matchAmount);
                     matchAmount = 0;
+                    break;
                 }
             }
         }
 
-        ChooseRandomMatchToAnimate();
-        SuggestAnimation();
+        //ChooseRandomMatchToAnimate();
+        //SuggestAnimation();
 
     }
 
@@ -376,44 +445,242 @@ public class GameManager : MonoBehaviour
     {
         int random = UnityEngine.Random.Range(1, 3);
 
+        if (suggestUpList.Count < 3 && suggestRightList.Count < 3)
+        {
+            Debug.LogWarning("No suggestion in here");
+            return;
+        }
+
+        // Only right list includes matches
         if (suggestUpList.Count < 3)
         {
+            Debug.LogWarning("Going iwth right list cause no match on uplist");
             // Go with right list
+            Tile[] matchTiles;
+            if (suggestRightAmount.Count > 1)
+            {
+                //Contains more than 1 match select random match
+
+                int randomMatchStart = UnityEngine.Random.Range(0, suggestRightAmount.Count);
+                Debug.LogWarning("Right list contains more than 1 match random = " + randomMatchStart);
+                int temp = 0;
+
+                matchTiles = new Tile[suggestRightAmount[randomMatchStart]];
+
+                for (int i = 0; i < suggestRightAmount.Count; i++)
+                {
+
+                    if (i == randomMatchStart)
+                    {
+                        for (int j = 0; j < suggestRightAmount[i]; j++)
+                        {
+                            matchTiles[j] = suggestRightList[j + temp];
+                        }
+
+                        break;
+                    }
+                    temp += suggestRightAmount[i];
+                }
+
+
+                SuggestAnimation(matchTiles);
+            }
+            //only contains 1 match so go with full list
+            else
+            {
+                Debug.LogWarning("Right list only contains 1 match");
+
+                matchTiles = new Tile[suggestRightList.Count];
+
+                for (int j = 0; j < suggestRightList.Count; j++)
+                {
+                    matchTiles[j] = suggestRightList[j];
+                }
+
+                SuggestAnimation(matchTiles);
+
+            }
 
             return;
         }
-        if(suggestRightList.Count < 3)
+
+        // Only right list includes matches
+        if (suggestRightList.Count < 3)
         {
+            Debug.LogWarning("Going iwth up list cause no match on rightlist");
 
             // Go with up list
+            Tile[] matchTiles;
+            if (suggestUpAmount.Count > 1)
+            {
+                //Contains more than 1 match select random match
+
+                int randomMatchStart = UnityEngine.Random.Range(0, suggestUpAmount.Count);
+                Debug.LogWarning("UP list contains more than 1 match random = " + randomMatchStart);
+
+                int temp = 0;
+
+                matchTiles = new Tile[suggestUpAmount[randomMatchStart]];
+
+                for (int i = 0; i < suggestUpAmount.Count; i++)
+                {
+
+                    if (i == randomMatchStart)
+                    {
+                        for (int j = 0; j < suggestUpAmount[i]; j++)
+                        {
+                            matchTiles[j] = suggestUpList[j + temp];
+                        }
+
+                        break;
+                    }
+                    temp += suggestUpAmount[i];
+                }
+
+
+                SuggestAnimation(matchTiles);
+            }
+            //only contains 1 match so go with full list
+            else
+            {
+                Debug.LogWarning("UP list only contains 1 match");
+
+                matchTiles = new Tile[suggestUpList.Count];
+
+                for (int j = 0; j < suggestUpList.Count; j++)
+                {
+                    matchTiles[j] = suggestUpList[j];
+                }
+
+                SuggestAnimation(matchTiles);
+
+            }
+
             return;
         }
 
-        if (random == 1 )
+        // Both lists are contains some matches we can choose random list
+        if (random == 1)
         {
+            print("RANDOM == 1");
             //Suggest in up link
+            Tile[] matchTiles;
+            if (suggestUpAmount.Count > 1)
+            {
+                //Contains more than 1 match select random match
+
+                int randomMatchStart = UnityEngine.Random.Range(0, suggestUpAmount.Count);
+                Debug.LogWarning("UP list contains more than 1 match random = " + randomMatchStart);
+
+                int temp = 0;
+
+                matchTiles = new Tile[suggestUpAmount[randomMatchStart]];
+
+                for (int i = 0; i < suggestUpAmount.Count; i++)
+                {
+
+                    if (i == randomMatchStart)
+                    {
+                        for (int j = 0; j < suggestUpAmount[i]; j++)
+                        {
+                            matchTiles[j] = suggestUpList[j + temp];
+                        }
+
+                        break;
+                    }
+                    temp += suggestUpAmount[i];
+                }
+
+
+                SuggestAnimation(matchTiles);
+            }
+            //only contains 1 match so go with full list
+            else
+            {
+                Debug.LogWarning("UP list contains 1 match");
+
+                matchTiles = new Tile[suggestUpList.Count];
+
+                for (int j = 0; j < suggestUpList.Count; j++)
+                {
+                    matchTiles[j] = suggestUpList[j];
+                }
+
+                SuggestAnimation(matchTiles);
+
+            }
+
 
         }
         else if (random == 2)
         {
+            print("RANDOM == 2");
             // suggest in rightlink
+
+            Tile[] matchTiles;
+            if (suggestRightAmount.Count > 1)
+            {
+                //Contains more than 1 match select random match
+
+                int randomMatchStart = UnityEngine.Random.Range(0, suggestRightAmount.Count);
+                Debug.LogWarning("Right list contains more than 1 match random = " + randomMatchStart);
+
+                int temp = 0;
+                matchTiles = new Tile[suggestRightAmount[randomMatchStart]];
+
+                for (int i = 0; i < suggestRightAmount.Count; i++)
+                {
+
+                    if (i == randomMatchStart)
+                    {
+                        for (int j = 0; j < suggestRightAmount[i]; j++)
+                        {
+                            matchTiles[j] = suggestRightList[j + temp];
+                        }
+
+                        break;
+                    }
+                    temp += suggestRightAmount[i];
+                }
+
+
+                SuggestAnimation(matchTiles);
+            }
+            //only contains 1 match so go with full list
+            else
+            {
+                Debug.LogWarning("Right list contains 1 match");
+
+                matchTiles = new Tile[suggestRightList.Count];
+
+                for (int j = 0; j < suggestRightList.Count; j++)
+                {
+                    matchTiles[j] = suggestRightList[j];
+                }
+
+                SuggestAnimation(matchTiles);
+
+            }
+
+            return;
         }
         else
-            Debug.LogError("Something wrong random = " + random);
+            Debug.LogError("Something wrong with random = " + random);
     }
 
-    private void SuggestAnimation()
+    private void SuggestAnimation(Tile[] tilesToAnimate)
     {
-        for (int i = 0; i < suggestRightList.Count; i++)
+        if (isAlreadyAnimatingSuggestedTiles)
         {
-            suggestRightList[i].transform.DOScale(scaleMultiplier,suggestCycleLength).SetLoops(-1, LoopType.Yoyo);
+            Debug.LogWarning("Already animating tiles");
+            return;
         }
-
-        for (int j = 0; j < suggestUpList.Count ; j++)
+        for (int i = 0; i < tilesToAnimate.Length; i++)
         {
-            suggestUpList[j].transform.DOScale(scaleMultiplier, suggestCycleLength).SetLoops(-1,LoopType.Yoyo);
-
+            tilesToAnimate[i].transform.DOScale(scaleMultiplier, suggestCycleLength).SetLoops(-1, LoopType.Yoyo).SetId("SuggestTween");
+            suggestedTiles.Add(tilesToAnimate[i]);
         }
+        isAlreadyAnimatingSuggestedTiles = true;
     }
 
     IEnumerator CheckMatchesAfterNewReplacement()
@@ -422,6 +689,8 @@ public class GameManager : MonoBehaviour
         {
             //Match yok
             print("NO MATCH AFTER REPLACE");
+            isPlayerInactive = true;
+            canSwap = true;
             yield break;
         }
         else
@@ -461,16 +730,40 @@ public class GameManager : MonoBehaviour
                     SwapTiles(grid[x, y], grid[x + 1, y]);
                     continue;
                 }
-                
+
 
                 // Check Right First
                 SwapTiles(grid[x, y], grid[x + 1, y]);
-                // Check UP 
+                // Then Check Up
                 SwapTiles(grid[x, y], grid[x, y + 1], false);
+
+
             }
 
         }
+        ChooseRandomMatchToAnimate();
+
     }
+
+    private void KillTweens()
+    {
+        DOTween.KillAll();
+        foreach (var item in suggestedTiles)
+        {
+            item.transform.localScale = Vector3.one;
+        }
+    }
+
+    private void ClearSuggestLists()
+    {
+        isAlreadyAnimatingSuggestedTiles = false;
+        suggestUpList.Clear();
+        suggestRightList.Clear();
+        suggestRightAmount.Clear();
+        suggestUpAmount.Clear();
+        suggestedTiles.Clear();
+    }
+
     private void MethodsAfterSwapAndMatch()
     {
         SearchLShape();
@@ -502,33 +795,24 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        //if (Input.GetKeyDown(KeyCode.Space))
+        //{
+        //    print("Try matches = " + CheckMatches());
+        //    //CheckMatches();
+        //}
+
+        SuggestMatchWithTime();
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            KillTweens();
+            ClearSuggestLists();
+
+        }
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            print("Try matches = " + CheckMatches());
-            //CheckMatches();
+            CheckMatchesOnStart();
         }
 
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            SearchLShape();
-        }
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            SuggestMatch();
-        }
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            SlideObjectsAfterMatch();
-        }
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            SpawnNewTiles();
-        }
-
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            DestroyMethods();
-        }
 
         if (Input.GetKeyDown(KeyCode.S))
         {
@@ -727,6 +1011,10 @@ public class GameManager : MonoBehaviour
 
                 if (grid[currentSlot.tileIndex.x, i].GetTile().objectType == currentSlot.GetTile().objectType)
                 {
+                    if (lMatchesList.Contains(grid[currentSlot.tileIndex.x, i]))
+                    {
+                        break;
+                    }
                     upLinks++;
                     tempLList.Add(grid[currentSlot.tileIndex.x, i]);
                     //  print(currentSlot.name + " icin " + "uplink bulundu adi : " + grid[currentSlot.tileIndex.x, i].name);
@@ -743,6 +1031,10 @@ public class GameManager : MonoBehaviour
 
                 if (grid[currentSlot.tileIndex.x, i].GetTile().objectType == currentSlot.GetTile().objectType)
                 {
+                    if (lMatchesList.Contains(grid[currentSlot.tileIndex.x, i]))
+                    {
+                        break;
+                    }
                     downLinks++;
                     tempLList.Add(grid[currentSlot.tileIndex.x, i]);
                     //print(currentSlot.name + " icin " + "downlink bulundu adi : " + grid[currentSlot.tileIndex.x, i].name);
@@ -780,9 +1072,31 @@ public class GameManager : MonoBehaviour
                     {
                         //Debug.Log($"Adding {lMatchesList[0].name} to hMatchList.");
 
+                        // Should delete same tiles from list 
+
+                        for (int i = 0; i < lMatchesList.Count; i++)
+                        {
+
+                            if (hMatchList.Contains(lMatchesList[i]))
+                            {
+                                int indexOfSameTile = hMatchList.IndexOf(lMatchesList[i]);
+                                int tempIndex = 0;
+                                for (int j = 0; j < matchAmountForX.Count; j++)
+                                {
+                                    tempIndex += matchAmountForX[i];
+                                    if (tempIndex>indexOfSameTile)
+                                    {
+                                        Debug.LogWarning("We Removed tile from hList = " + lMatchesList[i].tileIndex.x + "," + lMatchesList[i].tileIndex.y);
+                                        hMatchList.RemoveAt(indexOfSameTile);
+                                        matchAmountForX[i] -= 1;
+                                    }
+                                }
+                            }
+                        }
                         hMatchList.InsertRange(insertIndex, lMatchesList);
 
                         matchAmountForX[index] += upLinks + downLinks;
+
 
                         tempLList.Clear();
                         k += matchAmountForX[index];
@@ -978,5 +1292,6 @@ public class GameManager : MonoBehaviour
 
     public float GetCycleLength() => _cycleLength;
 
+    public bool CanSwap() => canSwap;
     public Vector2Int GetGridSize() => _gridLength;
 }

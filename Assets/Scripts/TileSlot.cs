@@ -10,9 +10,14 @@ public class TileSlot : MonoBehaviour
 
     private void OnMouseDown()
     {
-        GameManager.Instance.SelectTile(currentTile);
+        if (GameManager.Instance.CanSwap())
+        {
+
+            GameManager.Instance.SelectTile(currentTile);
+        }
+
     }
-    public void SetTile(Tile tile,bool shouldSpawnInstant=false, float speed = 0)
+    public void SetTile(Tile tile, bool shouldSpawnInstant = false, float speed = 0)
     {
         currentTile = tile;
         tile.index = tileIndex;
@@ -21,7 +26,7 @@ public class TileSlot : MonoBehaviour
             tile.AssignSlot(this);
         }
         else
-            tile.SetSlot(this,speed); // Let the tile know its slot
+            tile.SetSlot(this, speed); // Let the tile know its slot
     }
 
     public bool IsEmpty()
