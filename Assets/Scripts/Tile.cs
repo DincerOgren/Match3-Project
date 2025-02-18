@@ -9,6 +9,7 @@ public class Tile : MonoBehaviour
     public Vector2Int index;
     public TileSlot mySlot;
     private float _cycleLength;
+    public float tilePoint;
     private void Start()
     {
         initialScale = transform.localScale;

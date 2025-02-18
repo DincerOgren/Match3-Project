@@ -102,7 +102,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentTile: {fileID: 0}
-  tileNum: {x: 0, y: 0}
+  destroyFX: {fileID: 614793015465458987, guid: 002c8593c06c45c44a64e1fd323b50af, type: 3}
+  tileIndex: {x: 0, y: 0}
+  swipeThreshold: 0.75
 --- !u!58 &4414944656263519369
 CircleCollider2D:
   m_ObjectHideFlags: 0

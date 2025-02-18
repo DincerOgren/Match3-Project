@@ -3,6 +3,7 @@ using UnityEngine;
 using DG.Tweening;
 using System.Collections.Generic;
 using System.Collections;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -52,6 +53,9 @@ public class GameManager : MonoBehaviour
     public float scaleMultiplier = 1.5f;
     public float suggestCycleLength = .5f;
     public bool isAlreadyAnimatingSuggestedTiles = false;
+    [Header("Score")]
+    public TextMeshProUGUI scoreText;
+    public float score = 0;
 
     private void Awake()
     {
@@ -73,6 +77,15 @@ public class GameManager : MonoBehaviour
         grid = GridManager.Instance.gridArray;
 
         CheckMatchesOnStart();
+
+        //UpdateScoreText();
+    }
+
+    private void UpdateScoreText()
+    {
+        print("Score update call");
+
+        scoreText.text = score.ToString();
     }
 
 
@@ -138,7 +151,7 @@ public class GameManager : MonoBehaviour
         }
 
         //SearchLShape();
-        DestroyMethods();
+        DestroyMethods(true);
         SlideObjectsAfterMatch(true);
         SpawnNewTiles(true);
         ClearLists();
@@ -151,7 +164,7 @@ public class GameManager : MonoBehaviour
     {
 
         StopSuggest();
-
+        print("Touch selected tile index = " + tile.index);
 
 
         if (tileA == null)
@@ -247,10 +260,10 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                yield return new WaitForSeconds(_cycleLength);
+                yield return new WaitForSeconds(moveSpeedAfterSpawn);
                 MethodsAfterSwapAndMatch();
 
-                yield return new WaitForSeconds(_cycleLength);
+                yield return new WaitForSeconds(moveSpeedAfterSpawn);
 
                 StartCoroutine(CheckMatchesAfterNewReplacement());
             }
@@ -820,12 +833,68 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void DestroyMethods()
+    private void DestroyMethods(bool isStart = false)
     {
-        DestroyHorizontalNLShape();
-        DestroyVerticals();
+        if (isStart)
+        {
+
+            DestroyHorizontalNLShape();
+            DestroyVerticals();
+        }
+        else
+        {
+            CalculateHorizontalPoints();
+            DestroyHorizontalNLShape();
+            CalculateVerticalPoints();
+            DestroyVerticals();
+        }
     }
 
+    void CalculateHorizontalPoints()
+    {
+        if (hMatchList.Count < 0) 
+        {
+            print("No Horizontal matches");
+            return;
+        }
+        float tempPoints = 0;
+        int temp = 0;
+        for (int i = 0; i < matchAmountForX.Count; i++)
+        {
+            tempPoints += hMatchList[temp].GetTile().tilePoint * matchAmountForX[i];
+            print("Horizontal calculate tempPoints = " + tempPoints + " matchamountX i =" + matchAmountForX[i]+ " i = "+i);
+
+
+            temp += matchAmountForX[i];
+            
+        }
+
+        score += tempPoints;
+
+        UpdateScoreText();
+    }
+
+    void CalculateVerticalPoints()
+    {
+        if(vMatchList.Count <= 0)
+        {
+            print("Vertical match points deleted cause of L Match");
+            return;
+        }
+        float tempPoints = 0;
+        int temp = 0;
+        for (int i = 0; i < matchAmountForY.Count; i++)
+        {
+            tempPoints += vMatchList[temp].GetTile().tilePoint * matchAmountForY[i];
+            print("Vertical calculate tempPoints = " + tempPoints);
+            temp += matchAmountForY[i];
+
+        }
+
+        score += tempPoints;
+
+        UpdateScoreText();
+    }
     private void ClearLists()
     {
         hMatchList.Clear();
@@ -973,6 +1042,7 @@ public class GameManager : MonoBehaviour
             {
                 vMatchList.Remove(hMatchList[i]);
             }
+
             hMatchList[i].DestroyTile();
         }
     }
@@ -1284,7 +1354,7 @@ public class GameManager : MonoBehaviour
 
 
     }
-    TileSlot GetTile(int x, int y)
+    public TileSlot GetTileSlot(int x, int y)
     {
         return grid[x, y];
     }

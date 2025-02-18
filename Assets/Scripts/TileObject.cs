@@ -7,6 +7,7 @@ public class TileObject : ScriptableObject
     public string tileName;
     public Color color;
     public Sprite sprite;
+    public float tilePoints = 1;
 }
 
 public enum ObjectType

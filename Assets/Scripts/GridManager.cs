@@ -92,6 +92,7 @@ public class GridManager : MonoBehaviour
                 newTile.GetComponent<SpriteRenderer>().sprite = randomObject.sprite;
                 newTile.GetComponent<SpriteRenderer>().color = randomObject.color;
                 newTile.objectType = randomObject.objectType;
+                newTile.tilePoint = randomObject.tilePoints;
                 // newTile.index = temp.tileNum;
                 newTile.AssignSlot(temp);
 
@@ -117,6 +118,7 @@ public class GridManager : MonoBehaviour
             newTile.GetComponent<SpriteRenderer>().sprite = randomObject.sprite;
             newTile.GetComponent<SpriteRenderer>().color = randomObject.color;
             newTile.objectType = randomObject.objectType;
+            newTile.tilePoint = randomObject.tilePoints;
             extraTileList.Add(newTile);
         }
 

@@ -16,3 +16,4 @@ MonoBehaviour:
   tileName: Circle
   color: {r: 1, g: 0.99224085, b: 0, a: 1}
   sprite: {fileID: -2413806693520163455, guid: ebe73ca9363db456bacf42c025bb4847, type: 3}
+  tilePoints: 5

@@ -16,3 +16,4 @@ MonoBehaviour:
   tileName: Triangle
   color: {r: 0.29286885, g: 1, b: 0, a: 1}
   sprite: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}
+  tilePoints: 10
